@@ -9,6 +9,8 @@
     <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
         android:layout_marginTop="?attr/qmui_topbar_height"
         android:background="?attr/qmui_config_color_background"
         android:fitsSystemWindows="true">
@@ -20,7 +22,9 @@
             android:layout_marginRight="4dp"
             android:dividerHeight="1dp"
             app:layout_constraintLeft_toLeftOf="parent"
-            tools:layout_editor_absoluteY="4dp"></ListView>
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            tools:layout_editor_absoluteY="4dp" />
 
         <EditText
             android:id="@+id/search"

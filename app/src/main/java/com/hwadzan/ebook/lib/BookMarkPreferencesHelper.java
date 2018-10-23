@@ -18,4 +18,8 @@ public class BookMarkPreferencesHelper {
     public void save(String fileName, BookMark bookMark) {
         helper.put(fileName, bookMark);
     }
+
+    public void remove(String fileName) {
+        helper.remove(fileName);
+    }
 }

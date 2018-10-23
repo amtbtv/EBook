@@ -28,14 +28,18 @@ public class BookPreferencesHelper {
         return bookList;
     }
 
-    Comparator<Book> comparator = new Comparator<Book>() {
+    public static Comparator<Book> comparator = new Comparator<Book>() {
         @Override
         public int compare(Book o1, Book o2) {
-            return Long.compare(o1.lastReadTime, o2.lastReadTime);
+            return Long.compare(o2.lastReadTime, o1.lastReadTime);
         }
     };
 
     public void save(Book b) {
         helper.put(b.fabo_serial, b);
+    }
+
+    public void remove(Book book) {
+        helper.remove(book.fabo_serial);
     }
 }

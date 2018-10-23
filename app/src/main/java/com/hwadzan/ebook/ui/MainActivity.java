@@ -22,6 +22,7 @@ import com.bumptech.glide.Glide;
 import com.google.gson.Gson;
 import com.hwadzan.ebook.BookApplication;
 import com.hwadzan.ebook.R;
+import com.hwadzan.ebook.lib.BookMarkPreferencesHelper;
 import com.hwadzan.ebook.lib.BookPreferencesHelper;
 import com.hwadzan.ebook.model.Book;
 import com.liulishuo.okdownload.DownloadListener;
@@ -38,6 +39,7 @@ import com.qmuiteam.qmui.widget.QMUITopBarLayout;
 import com.qmuiteam.qmui.widget.dialog.QMUIBottomSheet;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -122,6 +124,25 @@ public class MainActivity extends AppCompatActivity {
         mTopBar.setTitle(getString(R.string.app_name));
         // 切换其他情况的按钮
 
+
+        mTopBar.addRightTextButton(R.string.about, R.id.topbar_right_about_button)
+                .setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        startActivity(new Intent(getThisActivity(), AboutUsActivity.class));
+                    }
+                });
+
+        mTopBar.addRightTextButton(R.string.fabao, R.id.topbar_right_add_fabao_button)
+                .setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        startActivityForResult(new Intent(getThisActivity(), CategoryActivity.class), CategoryActivityREQUESTCODE);
+                    }
+                });
+
+/*
+仅有两个按扭，没必要使用底部菜单了
         mTopBar.addRightImageButton(R.mipmap.icon_topbar_overflow, R.id.topbar_right_menu_button)
                 .setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -129,10 +150,10 @@ public class MainActivity extends AppCompatActivity {
                         showBottomSheet();
                     }
                 });
-
+*/
     }
 
-
+/*
     private void showBottomSheet() {
         new QMUIBottomSheet.BottomListSheetBuilder(this)
                 .addItem(getString(R.string.fabao))
@@ -153,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
                 })
                 .build().show();
     }
-
+*/
     private class BookAdapter extends RecyclerView.Adapter<BookViewHolder> {
         private Context mContext;
         @NonNull
@@ -170,8 +191,33 @@ public class MainActivity extends AppCompatActivity {
                     if(book.downloaded) {
                         Intent intent = new Intent(getThisActivity(), PdfReaderActivity.class);
                         intent.putExtra("book", new Gson().toJson(book));
+                        book.lastReadTime = System.currentTimeMillis();
+                        bookPreferencesHelper.save(book);
+                        Collections.sort(bookList, BookPreferencesHelper.comparator);
+                        bookAdapter.notifyDataSetChanged();
                         startActivity(intent);
                     }
+                }
+            });
+
+            view.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    final Book book = (Book) v.getTag();
+                    new QMUIBottomSheet.BottomListSheetBuilder(getThisActivity())
+                            .addItem(getString(R.string.delfabao)+":"+book.fabo_title)
+                            .setOnSheetItemClickListener(new QMUIBottomSheet.BottomListSheetBuilder.OnSheetItemClickListener() {
+                                @Override
+                                public void onClick(QMUIBottomSheet dialog, View itemView, int position, String tag) {
+                                    bookList.remove(book);
+                                    bookPreferencesHelper.remove(book);
+                                    new BookMarkPreferencesHelper(getThisActivity()).remove(book.fileName);
+                                    dialog.dismiss();
+                                    bookAdapter.notifyDataSetChanged();
+                                }
+                            })
+                            .build().show();
+                    return false;
                 }
             });
             return new BookViewHolder(view);

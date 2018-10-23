@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">華藏電子書</string>
+    <string name="about_us_content" formatted="false">
+           &#160;&#160;&#160;&#160;&#160;&#160;&#160;華藏淨宗弘化網app，提供淨空老法師,悟道法師,徐醒民,定弘法師(鍾茂森),蔡禮旭,胡小林,周泳杉等大德歷年影音資料的在線播放與下載服務。
+          \n&#160;&#160;&#160;&#160;&#160;&#160;&#160;開放授權大眾流通及下載閱讀。不得擅自加註版權所有，任意增減內容，非法牟利，侵害公眾權益及原著本意。    \n\n
+
+          版次 %v      \n
+          http://www.hwadzan.com/   \n\n
+          社團法人中華華藏淨宗學會 \n臺北市大安區信義路四段333-1號2樓  \n
+          財團法人華藏淨宗弘化基金會 \n 臺北市大安區信義路四段341號5樓 \n
+          TEL:02-27547178　FAX:02-27547262  \n
+          E-MAIL:amtb@hwadzan.com
+    </string>
+    <string name="search_hint">搜索</string>
+    <string name="open_failed">打开文件出错</string>
+    <string name="add_mark_success">添加成功</string>
+    <string name="waiting">等待中...</string>
+    <string name="downloading">下载中</string>
+    <string name="paused">已暂停</string>
+    <string name="complete">已完成</string>
+    <string name="category_fail">获取分类出错</string>
+    <string name="category_content_fail">获取图书列表出错</string>
+    <string name="fabao">法宝</string>
+    <string name="about">关于</string>
+    <string name="book_mark">书签</string>
+    <string name="night">夜间</string>
+</resources>

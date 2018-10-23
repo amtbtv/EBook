@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.qmuiteam.qmui.widget.QMUIWindowInsetLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.PdfReaderActivity">
+
+    <com.qmuiteam.qmui.widget.QMUINotchConsumeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <com.hwadzan.ebook.lib.PdfLinearLayout
+            android:id="@+id/pdf_layout"
+            android:fitsSystemWindows="false"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <com.github.barteksc.pdfviewer.PDFView
+                android:id="@+id/pdfView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bar_divider" />
+        </com.hwadzan.ebook.lib.PdfLinearLayout>
+
+    </com.qmuiteam.qmui.widget.QMUINotchConsumeLayout>
+
+    <com.qmuiteam.qmui.widget.QMUITopBarLayout
+        android:id="@+id/topbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fitsSystemWindows="true"/>
+
+
+    <FrameLayout
+        android:id="@+id/tabs_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="@color/app_color_blue_2"
+        android:fitsSystemWindows="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:gravity="center_vertical"
+            android:padding="4dp">
+
+            <TextView
+                android:id="@+id/process"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="001/100" />
+
+            <SeekBar
+                android:id="@+id/seekBarPage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+
+            <Switch
+                android:id="@+id/switchDayNight"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/night" />
+
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+
+</com.qmuiteam.qmui.widget.QMUIWindowInsetLayout>

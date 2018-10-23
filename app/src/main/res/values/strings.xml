@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">华藏电子书</string>
+    <string name="about_us_content" formatted="false">
+         &#160;&#160;&#160;&#160;&#160;&#160;&#160;华藏净宗弘化网app，提供净空老法师,悟道法师,徐醒民,定弘法师,钟茂森,蔡礼旭,胡小林,钟茂森,周泳杉等大德历年影音资料的在线播放与下载服务
+                 \n&#160;&#160;&#160;&#160;&#160;&#160;&#160;开授权大众流通及下载阅读。不得擅自加注版权所有，任意增减内容，非法牟利，侵害公众权益及原著本意。 \n\n
+
+                 http://www.hwadzan.com/ \n\n
+                 社团法人中华华藏净宗学会 \n 台北市大安区信义路四段333-1号2楼 \n
+                 财团法人华藏净宗弘化基金会 \n 台北市大安区信义路四段341号5楼 \n
+                 TEL:02-27547178　FAX:02-27547262 \n
+         E-MAIL:amtb@hwadzan.com
+     </string>
+    <string name="search_hint">搜索</string>
+    <string name="open_failed">打开文件出错</string>
+    <string name="add_mark_success">添加成功</string>
+    <string name="waiting">等待中...</string>
+    <string name="downloading">下载中</string>
+    <string name="paused">已暂停</string>
+    <string name="complete">已完成</string>
+    <string name="category_fail">获取分类出错</string>
+    <string name="category_content_fail">获取图书列表出错</string>
+    <string name="fabao">法宝</string>
+    <string name="about">关于</string>
+    <string name="book_mark">书签</string>
+    <string name="night">夜间</string>
+</resources>

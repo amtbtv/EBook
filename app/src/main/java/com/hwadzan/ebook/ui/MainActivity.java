@@ -188,7 +188,9 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     Book book = (Book) v.getTag();
-                    if(book.downloaded) {
+                    File cacheDir = app.getCacheDir();
+                    File file = new File(cacheDir, "book/"+book.fileName);
+                    if(book.downloaded && file.exists()) {
                         Intent intent = new Intent(getThisActivity(), PdfReaderActivity.class);
                         intent.putExtra("book", new Gson().toJson(book));
                         book.lastReadTime = System.currentTimeMillis();
@@ -277,7 +279,13 @@ public class MainActivity extends AppCompatActivity {
             Util.enableConsoleLog();
             serialQueue = new DownloadSerialQueue(downloadListener);
 
+            File cacheDir = app.getCacheDir();
             for(Book b : bookList){
+                File file = new File(cacheDir, "book/"+b.fileName);
+                if(!file.exists()){
+                    b.downloaded=false;
+                    bookPreferencesHelper.save(b);
+                }
                 if(!b.downloaded){
                     enqueueDownloadTask(b);
                 }

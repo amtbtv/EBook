@@ -48,6 +48,7 @@ public class PdfReaderActivity extends Activity {
     SeekBar seekBarPage;
     Switch switchDayNight;
     TextView process;
+    TextView process_textView;
     private boolean isFullScreen;
     private FrameLayout mTabContainer;
 
@@ -84,6 +85,7 @@ public class PdfReaderActivity extends Activity {
 
         pdf_layout = (PdfLinearLayout) findViewById(R.id.pdf_layout);
         process = (TextView) findViewById(R.id.process);
+        process_textView = (TextView) findViewById(R.id.process_textView);
 
         seekBarPage = (SeekBar) findViewById(R.id.seekBarPage);
         seekBarPage.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -132,10 +134,12 @@ public class PdfReaderActivity extends Activity {
                                 pdfView.doPageSnap();
                             }
                         } else {
-                            if(isFullScreen)
+                            if(isFullScreen) {
+                                seekBarPage.setProgress(pdfView.getCurrentPage()+1);
                                 changeToNotFullScreen();
-                            else
+                            }else {
                                 changeToFullScreen();
+                            }
                         }
                     }
                 });
@@ -203,12 +207,14 @@ pdfView.fromAsset(String)
                     @Override
                     public void onPageChanged(int page, int pageCount) {
                         process.setText(String.valueOf(page+1)+"/"+String.valueOf(pageCount));
+                        process_textView.setText(String.valueOf(page+1)+"/"+String.valueOf(pageCount));
                     }
                 })
                 .onLoad(new OnLoadCompleteListener() {
                     @Override
                     public void loadComplete(int nbPages) {
                         seekBarPage.setMax(nbPages);
+                        seekBarPage.setProgress(bookMark.page + 1);
                     }
                 })
                 .load();

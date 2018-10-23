@@ -23,6 +23,12 @@
                 android:background="@color/bar_divider" />
         </com.hwadzan.ebook.lib.PdfLinearLayout>
 
+        <TextView
+            android:id="@+id/process_textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|right"
+            android:layout_margin="8dp" />
     </com.qmuiteam.qmui.widget.QMUINotchConsumeLayout>
 
     <com.qmuiteam.qmui.widget.QMUITopBarLayout

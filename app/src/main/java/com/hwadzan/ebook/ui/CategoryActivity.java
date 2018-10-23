@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,6 +25,7 @@ import com.google.gson.reflect.TypeToken;
 import com.hwadzan.ebook.BookApplication;
 import com.hwadzan.ebook.Constants;
 import com.hwadzan.ebook.R;
+import com.hwadzan.ebook.lib.TW2CN;
 import com.hwadzan.ebook.model.Book;
 import com.hwadzan.ebook.model.Category;
 import com.hwadzan.ebook.model.Host;
@@ -52,12 +55,16 @@ public class CategoryActivity extends AppCompatActivity {
     List<Category> categoryList;
     CategoryAdatper categoryAdatper;
 
+
     List<Book> bookList;
+    List<Book> bookListFilter;
     BooksAdatper booksAdatper;
 
     BookApplication app;
 
     OkHttpClient http;
+
+    TW2CN tw2CN;
 
     QMUITopBarLayout mTopBar;
     @Override
@@ -65,6 +72,10 @@ public class CategoryActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_category);
         QMUIStatusBarHelper.translucent(this);
+
+        tw2CN = TW2CN.getInstance(this);
+        bookListFilter = new ArrayList<>();
+        bookList = new ArrayList<>();
 
         app = (BookApplication) getApplication();
         mTopBar = (QMUITopBarLayout) findViewById(R.id.topbar);
@@ -74,6 +85,37 @@ public class CategoryActivity extends AppCompatActivity {
 
         category_lv = (ListView) findViewById(R.id.category_lv);
         search = (EditText) findViewById(R.id.search);
+        search.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if(s != null && s.length()>0){
+                    String str = s.toString();
+                    if(tw2CN.getIsZH())
+                        str = tw2CN.s2t(str);
+
+                    bookListFilter.clear();
+                    for(Book b : bookList){
+                        if(b.fabo_title.indexOf(str)>=0){
+                            bookListFilter.add(b);
+                        }
+                    }
+                    booksAdatper.notifyDataSetChanged();
+                } else {
+                    bookListFilter.clear();
+                    bookListFilter.addAll(bookList);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+            }
+        });
+
         content_lv = (ListView) findViewById(R.id.content_lv);
 
         category_lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -154,6 +196,8 @@ public class CategoryActivity extends AppCompatActivity {
             public void onResponse(Call call, Response response) throws IOException {
                 String json = response.body().string();
                 bookList = new Gson().fromJson(json,new TypeToken<List<Book>>(){}.getType());
+                bookListFilter.clear();
+                bookListFilter.addAll(bookList);
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -287,12 +331,12 @@ public class CategoryActivity extends AppCompatActivity {
 
         @Override
         public int getCount() {
-            return bookList.size();
+            return bookListFilter.size();
         }
 
         @Override
         public Object getItem(int position) {
-            return bookList.get(position);
+            return bookListFilter.get(position);
         }
 
         @Override
@@ -302,7 +346,7 @@ public class CategoryActivity extends AppCompatActivity {
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            Book b = bookList.get(position);
+            Book b = bookListFilter.get(position);
             //观察convertView随ListView滚动情况
             if(convertView==null)
                 convertView = mInflater.inflate(R.layout.item_category_content, null);

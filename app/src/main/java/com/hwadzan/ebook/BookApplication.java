@@ -22,7 +22,8 @@ public class BookApplication extends Application {
     public void onCreate() {
         super.onCreate();
 
-        //bygly
+        //bygly 1979710467
+        //ks45i89f
         //app key : 857b9eee-3a37-48c7-aca1-1dc40f3ac47b
         Bugly.init(getApplicationContext(), "f456fb17ee", true);
 

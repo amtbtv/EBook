@@ -91,8 +91,8 @@ public class PdfReaderActivity extends Activity {
         seekBarPage.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if(progress-1 != pdfView.getCurrentPage())
-                    pdfView.jumpTo(progress-1);
+                if(progress != pdfView.getCurrentPage())
+                    pdfView.jumpTo(progress);
             }
 
             @Override
@@ -134,7 +134,7 @@ public class PdfReaderActivity extends Activity {
                             }
                         } else {
                             if(isFullScreen) {
-                                seekBarPage.setProgress(pdfView.getCurrentPage()+1);
+                                seekBarPage.setProgress(pdfView.getCurrentPage());
                                 changeToNotFullScreen();
                             }else {
                                 changeToFullScreen();
@@ -212,8 +212,8 @@ pdfView.fromAsset(String)
                 .onLoad(new OnLoadCompleteListener() {
                     @Override
                     public void loadComplete(int nbPages) {
-                        seekBarPage.setMax(nbPages);
-                        seekBarPage.setProgress(bookMark.page + 1);
+                        seekBarPage.setMax(nbPages-1);
+                        seekBarPage.setProgress(bookMark.page);
                     }
                 })
                 .load();

@@ -91,7 +91,8 @@ public class PdfReaderActivity extends Activity {
         seekBarPage.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                pdfView.jumpTo(progress);
+                if(progress-1 != pdfView.getCurrentPage())
+                    pdfView.jumpTo(progress-1);
             }
 
             @Override
@@ -125,13 +126,11 @@ public class PdfReaderActivity extends Activity {
                         if(x<screenWidth3 && isFullScreen){
                             if(pdfView.getCurrentPage()>0) {
                                 pdfView.jumpTo(pdfView.getCurrentPage() - 1, true);
-                                pdfView.doPageSnap();
 
                             }
                         } else if(x>screenWidth3*2 && isFullScreen){
                             if(pdfView.getCurrentPage()<pdfView.getPageCount()-1) {
                                 pdfView.jumpTo(pdfView.getCurrentPage() + 1, true);
-                                pdfView.doPageSnap();
                             }
                         } else {
                             if(isFullScreen) {

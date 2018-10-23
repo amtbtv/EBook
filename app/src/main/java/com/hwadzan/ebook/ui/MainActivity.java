@@ -188,8 +188,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     Book book = (Book) v.getTag();
-                    File cacheDir = app.getCacheDir();
-                    File file = new File(cacheDir, "book/"+book.fileName);
+                    File file = new File(parentFile, book.fileName);
                     if(book.downloaded && file.exists()) {
                         Intent intent = new Intent(getThisActivity(), PdfReaderActivity.class);
                         intent.putExtra("book", new Gson().toJson(book));
@@ -211,6 +210,9 @@ public class MainActivity extends AppCompatActivity {
                             .setOnSheetItemClickListener(new QMUIBottomSheet.BottomListSheetBuilder.OnSheetItemClickListener() {
                                 @Override
                                 public void onClick(QMUIBottomSheet dialog, View itemView, int position, String tag) {
+                                    File file = new File(parentFile, book.fileName);
+                                    if(file.exists())
+                                        file.delete();
                                     bookList.remove(book);
                                     bookPreferencesHelper.remove(book);
                                     new BookMarkPreferencesHelper(getThisActivity()).remove(book.fileName);

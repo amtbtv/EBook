@@ -157,7 +157,7 @@ public class CategoryActivity extends AppCompatActivity {
         for (Host host : app.hostList) {
             if ((host.fabo_host_type.equals("PDF") && b.pdf))// || (host.fabo_host_type.equals("TXT") && b.txt) || (host.fabo_host_type.equals("EPUB") && b.epub))
             {
-                builder.addItem(String.format("从%s下载%s", host.fabo_host_name, host.fabo_host_type), host.fabo_host_server+";"+host.fabo_host_type);
+                builder.addItem(String.format(getString(R.string.from_download), host.fabo_host_name, host.fabo_host_type), host.fabo_host_server+";"+host.fabo_host_type);
             }
         }
         builder.setOnSheetItemClickListener(new QMUIBottomSheet.BottomListSheetBuilder.OnSheetItemClickListener() {

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <string name="app_name">華藏電子書</string>
     <string name="about_us_content" formatted="false">
            &#160;&#160;&#160;&#160;&#160;&#160;&#160;華藏淨宗弘化網app，提供淨空老法師,悟道法師,徐醒民,定弘法師(鍾茂森),蔡禮旭,胡小林,周泳杉等大德歷年影音資料的在線播放與下載服務。
@@ -14,17 +13,20 @@
           E-MAIL:amtb@hwadzan.com
       </string>
     <string name="search_hint">搜索</string>
-    <string name="open_failed">打开文件出错</string>
+    <string name="open_failed">打開文件出錯</string>
     <string name="add_mark_success">添加成功</string>
     <string name="waiting">等待中...</string>
-    <string name="downloading">下载中</string>
-    <string name="paused">已暂停</string>
+    <string name="downloading">下載中</string>
+    <string name="paused">已暫停</string>
     <string name="complete">已完成</string>
-    <string name="category_fail">获取分类出错</string>
-    <string name="category_content_fail">获取图书列表出错</string>
-    <string name="fabao">法宝</string>
-    <string name="about">关于</string>
-    <string name="book_mark">书签</string>
-    <string name="night">夜间</string>
+    <string name="category_fail">獲取分類出錯</string>
+    <string name="category_content_fail">獲取圖書列表出錯</string>
+    <string name="fabao">法寶</string>
+    <string name="about">關於</string>
+    <string name="book_mark">書簽</string>
+    <string name="night">夜間</string>
     <string name="delfabao">移除</string>
+    <string name="from_download">從%s下載%s</string>
+    <string name="downoad_over">完成</string>
+    <string name="downoad_error">下載出錯</string>
 </resources>

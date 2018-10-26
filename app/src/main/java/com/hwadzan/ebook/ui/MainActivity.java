@@ -331,12 +331,12 @@ public class MainActivity extends AppCompatActivity {
             if(EndCause.COMPLETED == cause) {
                 Book b = (Book) task.getTag();
                 b.downloaded = true;
-                b.downloaProcess = "完成";
+                b.downloaProcess = getThisActivity().getString(R.string.downoad_over);
                 bookPreferencesHelper.save(b);
                 bookAdapter.notifyDataSetChanged();
             } else if(EndCause.ERROR == cause){
                 Book b = (Book) task.getTag();
-                b.downloaProcess = "下载出错";
+                b.downloaProcess = getThisActivity().getString(R.string.downoad_error);;
                 bookPreferencesHelper.save(b);
                 bookAdapter.notifyDataSetChanged();
             }

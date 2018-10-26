@@ -196,7 +196,7 @@ pdfView.fromAsset(String)
                 .enableDoubletap(false) //双击不放大
                 .enableSwipe(true) // 允许手指滑动操作换页进度
                 .swipeHorizontal(true) //水平翻页
-                .autoSpacing(true) // 自动页间距
+                .spacing(1) // 自动页间距
                 .pageFitPolicy(FitPolicy.BOTH) //页面适应屏幕大小
                 .pageSnap(true) // snap pages to screen boundaries
                 .pageFling(true) // make a fling change only a single page like ViewPager

@@ -9,7 +9,7 @@
                  财团法人华藏净宗弘化基金会 \n 台北市大安区信义路四段341号5楼 \n
                  TEL:02-27547178　FAX:02-27547262 \n
          E-MAIL:amtb@hwadzan.com
-     </string>
+    </string>
     <string name="search_hint">搜索</string>
     <string name="open_failed">打开文件出错</string>
     <string name="add_mark_success">添加成功</string>
@@ -24,4 +24,7 @@
     <string name="book_mark">书签</string>
     <string name="night">夜间</string>
     <string name="delfabao">移除</string>
+    <string name="from_download">从%s下载%s</string>
+    <string name="downoad_over">完成</string>
+    <string name="downoad_error">下载出错</string>
 </resources>

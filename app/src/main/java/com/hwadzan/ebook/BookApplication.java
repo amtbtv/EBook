@@ -29,7 +29,19 @@ public class BookApplication extends Application {
 
     }
 
-    public File getCacheDir() {
+    public File getFileDirFun(String type) {
+        File fileDir;
+        if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()) || !Environment.isExternalStorageRemovable()) {
+            fileDir = getExternalFilesDir(type);
+            if(fileDir==null)
+                fileDir = getFilesDir();
+        } else {
+            fileDir = getFilesDir();
+        }
+        return fileDir;
+    }
+
+    public File getCacheDirFun() {
         File cacheDir;
         if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()) || !Environment.isExternalStorageRemovable()) {
             cacheDir = getExternalCacheDir();
@@ -40,6 +52,8 @@ public class BookApplication extends Application {
         }
         return cacheDir;
     }
+
+
 
     /**
      * 检测网络是否可用

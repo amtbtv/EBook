@@ -190,7 +190,7 @@ pdfView.fromAsset(String)
     .pageFling(false) // 单页模式，就象ViewPager
     .nightMode(false) // 夜间模式
     .load();*/
-        File cacheDir = app.getCacheDir();
+        File cacheDir = app.getFileDirFun("pdf");
         File file = new File(cacheDir, "book/"+book.fileName);
         pdfView.fromFile(file)
                 .enableDoubletap(false) //双击不放大

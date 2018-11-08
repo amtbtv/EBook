@@ -81,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
         initTopBar();
         mTopBar.setTitle(getString(R.string.app_name));
 
-        parentFile = new File(app.getCacheDir(), "book");
+        parentFile = new File(app.getFileDirFun("pdf"), "book");
         if (!parentFile.exists())
             parentFile.mkdirs();
 
@@ -281,9 +281,9 @@ public class MainActivity extends AppCompatActivity {
             Util.enableConsoleLog();
             serialQueue = new DownloadSerialQueue(downloadListener);
 
-            File cacheDir = app.getCacheDir();
+            File pdfDir = app.getFileDirFun("pdf");
             for(Book b : bookList){
-                File file = new File(cacheDir, "book/"+b.fileName);
+                File file = new File(pdfDir, "book/"+b.fileName);
                 if(!file.exists()){
                     b.downloaded=false;
                     bookPreferencesHelper.save(b);

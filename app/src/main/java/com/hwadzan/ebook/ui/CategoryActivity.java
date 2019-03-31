@@ -69,6 +69,8 @@ public class CategoryActivity extends AppCompatActivity {
     TW2CN tw2CN;
 
     QMUITopBarLayout mTopBar;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -284,7 +286,7 @@ public class CategoryActivity extends AppCompatActivity {
     */
 
     private void downCategoryList() {
-        Request request = new Request.Builder().url(Constants.CATEGORY_URL).build();
+        final Request request = new Request.Builder().url(Constants.CATEGORY_URL()).build();
         http.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {

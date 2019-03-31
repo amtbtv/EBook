@@ -1,11 +1,22 @@
 package com.hwadzan.ebook;
 
+import java.util.Locale;
+
 public class Constants {
-    public static final String CATEGORY_URL = "http://edu.amtb.de/ibook_catalog";
-    public static final String HOST_URL = "http://edu.amtb.de/ibook_download_hosts";
+
+    public static final String IBOOK_CONFIG_URL_CN = "https://amtbapi.amtb.cn/ibook_config";
+    public static final String IBOOK_CONFIG_URL_TW = "https://amtbapi.amtb.de/ibook_config";
+
+    public static String domain = ""; //https://amtbapi.amtb.de";
+    public static String download = ""; //"http://vod.amtb.de/redirect";
+
     //http://edu.amtb.de/ibook_download_hosts
     public static String Make_BOOKS_URL(int aid){
-        return "http://edu.amtb.de/ibook_data/" + String.valueOf(aid);
+        return domain + "/ibook_data/" + String.valueOf(aid);
+    }
+
+    public static String CATEGORY_URL(){
+        return domain + "/ibook_catalog";
     }
 
     /*

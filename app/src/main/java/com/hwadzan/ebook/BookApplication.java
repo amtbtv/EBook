@@ -67,7 +67,7 @@ public class BookApplication extends Application {
         if (cm != null) {
             ni = cm.getActiveNetworkInfo();
         }
-        return ni != null && ni.isConnected();
+        return ni != null && ni.isAvailable();
     }
 
     /**

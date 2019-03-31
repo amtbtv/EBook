@@ -16,14 +16,17 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.google.gson.Gson;
 import com.hwadzan.ebook.BookApplication;
+import com.hwadzan.ebook.Constants;
 import com.hwadzan.ebook.R;
 import com.hwadzan.ebook.lib.BookMarkPreferencesHelper;
 import com.hwadzan.ebook.lib.BookPreferencesHelper;
 import com.hwadzan.ebook.model.Book;
+import com.hwadzan.ebook.model.ibook_config;
 import com.liulishuo.filedownloader.BaseDownloadTask;
 import com.liulishuo.filedownloader.FileDownloadListener;
 import com.liulishuo.filedownloader.FileDownloader;
@@ -36,8 +39,15 @@ import com.qmuiteam.qmui.widget.dialog.QMUIDialog;
 import com.qmuiteam.qmui.widget.dialog.QMUIDialogAction;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity {
     public static final int CategoryActivityREQUESTCODE = 805;
@@ -54,6 +64,10 @@ public class MainActivity extends AppCompatActivity {
     int imageWidth;
     int imageHeight;
 
+    int downloadConfigState = 0; // 0 未下载， 1 正在下载, 2 下载出错,  3 下载成功
+
+    FrameLayout mask_layout;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,6 +81,8 @@ public class MainActivity extends AppCompatActivity {
 
         imageWidth = QMUIDisplayHelper.getScreenWidth(this) / 3 - QMUIDisplayHelper.dp2px(this, 10);
         imageHeight = imageWidth*228/150;
+
+        mask_layout = (FrameLayout) findViewById(R.id.mask_layout);
 
         bookList = bookPreferencesHelper.getAll();
 
@@ -88,6 +104,13 @@ public class MainActivity extends AppCompatActivity {
         if(bookList.size()==0){
             showSelectBookDialog();
         }
+    }
+
+    private void showMaskProcessBar(boolean show){
+        if(show)
+            mask_layout.setVisibility(View.VISIBLE);
+        else
+            mask_layout.setVisibility(View.GONE);
     }
 
     private void showSelectBookDialog(){
@@ -150,7 +173,17 @@ public class MainActivity extends AppCompatActivity {
                 .setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        startActivityForResult(new Intent(getThisActivity(), CategoryActivity.class), CategoryActivityREQUESTCODE);
+                        if(downloadConfigState==3) {
+                            startActivityForResult(new Intent(getThisActivity(), CategoryActivity.class), CategoryActivityREQUESTCODE);
+                        } else {
+                            if(downloadConfigState == 2){
+                                Toast.makeText(getThisActivity(), getString(R.string.downloadConfigFail), Toast.LENGTH_LONG).show();
+                            } else if(downloadConfigState == 1){
+                                Toast.makeText(getThisActivity(), getString(R.string.downloadingConfig), Toast.LENGTH_LONG).show();
+                            } else if(downloadConfigState == 0){
+                                Toast.makeText(getThisActivity(), getString(R.string.noDownloadConfig), Toast.LENGTH_LONG).show();
+                            }
+                        }
                     }
                 });
 
@@ -253,7 +286,6 @@ public class MainActivity extends AppCompatActivity {
             bookViewHolder.cardView.setTag(b);
 
             Glide.with(mContext).load(b.img_s).into(bookViewHolder.img);
-
         }
 
         @Override
@@ -286,27 +318,65 @@ public class MainActivity extends AppCompatActivity {
         BaseDownloadTask task = FileDownloader.getImpl().create(b.url);
         task.setPath(file.getAbsolutePath());
         task.setTag(b);
+        task.setAutoRetryTimes(3);
         task.setListener(downloadListener);
         serialQueue.enqueue(task);
     }
 
-    private void startDownload() {
-        if(serialQueue==null) {
-            serialQueue = new FileDownloadSerialQueue();
-            File pdfDir = app.getFileDirFun("pdf");
-            for(Book b : bookList){
-                File file = new File(pdfDir, "book/"+b.fileName);
-                if(!file.exists()){
-                    b.downloaded=false;
-                    bookPreferencesHelper.save(b);
+    Callback downConfigCallback = new Callback() {
+        @Override
+        public void onFailure(Call call, IOException e) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if(Constants.domain.isEmpty()) {
+                        downloadConfigState = 2; //下载出错
+                    }
                 }
-                if(!b.downloaded){
-                    enqueueDownloadTask(b);
-                }
+            });
+        }
+
+        @Override
+        public void onResponse(Call call, Response response) throws IOException {
+            String json = response.body().string();
+            ibook_config config = new Gson().fromJson(json, ibook_config.class);
+            if(Constants.domain.isEmpty()) {
+                Constants.domain = config.domain;
+                Constants.download = config.download;
+                downloadConfigState = 3; //下载成功
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if(serialQueue==null) {
+                            serialQueue = new FileDownloadSerialQueue();
+                            File pdfDir = app.getFileDirFun("pdf");
+                            for(Book b : bookList){
+                                File file = new File(pdfDir, "book/"+b.fileName);
+                                if(!file.exists()){
+                                    b.downloaded=false;
+                                    bookPreferencesHelper.save(b);
+                                }
+                                if(!b.downloaded){
+                                    enqueueDownloadTask(b);
+                                }
+                            }
+                            serialQueue.resume();
+                        } else {
+                            serialQueue.resume();
+                        }
+                    }
+                });
             }
-            serialQueue.resume();
-        } else {
-            serialQueue.resume();
+
+        }
+    };
+
+    private void startDownload() {
+        if(app.isNetworkConnected()) {
+            downloadConfigState = 1; //正在下载
+            OkHttpClient http = new OkHttpClient();
+            http.newCall(new Request.Builder().url(Constants.IBOOK_CONFIG_URL_TW).build()).enqueue(downConfigCallback);
+            http.newCall(new Request.Builder().url(Constants.IBOOK_CONFIG_URL_CN).build()).enqueue(downConfigCallback);
         }
     }
 

@@ -35,4 +35,7 @@
     <string name="UnsupportedBook">本類圖書暫不支持</string>
     <string name="ConfirmDownload">確定下載選定圖書</string>
     <string name="leftPage">向左翻頁</string>
+    <string name="downloadConfigFail">獲取信息出錯，請檢測網絡連接</string>
+    <string name="downloadingConfig">正在獲取信息，請稍等</string>
+    <string name="noDownloadConfig">還未獲取信息，請稍等</string>
 </resources>

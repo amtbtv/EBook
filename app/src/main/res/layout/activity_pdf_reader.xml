@@ -13,9 +13,9 @@
 
         <com.hwadzan.ebook.lib.PdfLinearLayout
             android:id="@+id/pdf_layout"
-            android:fitsSystemWindows="false"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:fitsSystemWindows="false">
 
             <com.github.barteksc.pdfviewer.PDFView
                 android:id="@+id/pdfView"
@@ -52,6 +52,14 @@
             android:layout_height="48dp"
             android:gravity="center_vertical"
             android:padding="4dp">
+<!--
+
+            <Switch
+                android:id="@+id/switchLeftPage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/leftPage" />
+-->
 
             <TextView
                 android:id="@+id/process"

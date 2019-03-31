@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.GridLayoutManager;
@@ -25,18 +24,16 @@ import com.hwadzan.ebook.R;
 import com.hwadzan.ebook.lib.BookMarkPreferencesHelper;
 import com.hwadzan.ebook.lib.BookPreferencesHelper;
 import com.hwadzan.ebook.model.Book;
-import com.liulishuo.okdownload.DownloadListener;
-import com.liulishuo.okdownload.DownloadSerialQueue;
-import com.liulishuo.okdownload.DownloadTask;
-import com.liulishuo.okdownload.core.Util;
-import com.liulishuo.okdownload.core.cause.EndCause;
-import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
-import com.liulishuo.okdownload.core.listener.DownloadListener1;
-import com.liulishuo.okdownload.core.listener.assist.Listener1Assist;
+import com.liulishuo.filedownloader.BaseDownloadTask;
+import com.liulishuo.filedownloader.FileDownloadListener;
+import com.liulishuo.filedownloader.FileDownloader;
+import com.liulishuo.filedownloader.util.FileDownloadSerialQueue;
 import com.qmuiteam.qmui.util.QMUIDisplayHelper;
 import com.qmuiteam.qmui.util.QMUIStatusBarHelper;
 import com.qmuiteam.qmui.widget.QMUITopBarLayout;
 import com.qmuiteam.qmui.widget.dialog.QMUIBottomSheet;
+import com.qmuiteam.qmui.widget.dialog.QMUIDialog;
+import com.qmuiteam.qmui.widget.dialog.QMUIDialogAction;
 
 import java.io.File;
 import java.util.Collections;
@@ -52,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
     BookAdapter bookAdapter;
 
     File parentFile;
-    DownloadSerialQueue serialQueue;
+    FileDownloadSerialQueue serialQueue;
 
     int imageWidth;
     int imageHeight;
@@ -72,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
         imageHeight = imageWidth*228/150;
 
         bookList = bookPreferencesHelper.getAll();
+
         recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         GridLayoutManager layoutManager=new GridLayoutManager(this,3);
         recyclerView.setLayoutManager(layoutManager);
@@ -87,8 +85,23 @@ public class MainActivity extends AppCompatActivity {
 
         startDownload();
 
+        if(bookList.size()==0){
+            showSelectBookDialog();
+        }
     }
 
+    private void showSelectBookDialog(){
+        new QMUIDialog.MessageDialogBuilder(this)
+                .setTitle(R.string.Prompt)
+                .setMessage(R.string.NoBookMessage)
+                .addAction(R.string.ok, new QMUIDialogAction.ActionListener() {
+                    @Override
+                    public void onClick(QMUIDialog dialog, int index) {
+                        dialog.dismiss();
+                    }
+                })
+                .show();
+    }
 
     //接收返回值
     @Override
@@ -270,17 +283,16 @@ public class MainActivity extends AppCompatActivity {
 
     private void enqueueDownloadTask(Book b){
         File file = new File(parentFile, b.fileName);
-        DownloadTask task = new DownloadTask.Builder(b.url, file).build();
+        BaseDownloadTask task = FileDownloader.getImpl().create(b.url);
+        task.setPath(file.getAbsolutePath());
         task.setTag(b);
+        task.setListener(downloadListener);
         serialQueue.enqueue(task);
     }
 
     private void startDownload() {
         if(serialQueue==null) {
-
-            Util.enableConsoleLog();
-            serialQueue = new DownloadSerialQueue(downloadListener);
-
+            serialQueue = new FileDownloadSerialQueue();
             File pdfDir = app.getFileDirFun("pdf");
             for(Book b : bookList){
                 File file = new File(pdfDir, "book/"+b.fileName);
@@ -293,6 +305,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             serialQueue.resume();
+        } else {
+            serialQueue.resume();
         }
     }
 
@@ -303,43 +317,64 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    DownloadListener downloadListener = new DownloadListener1() {
+    FileDownloadListener downloadListener = new FileDownloadListener() {
+        /*
+pending 	等待，已经进入下载队列 	数据库中的soFarBytes与totalBytes
+started 	结束了pending，并且开始当前任务的Runnable 	-
+connected 	已经连接上 	ETag, 是否断点续传, soFarBytes, totalBytes
+progress 	下载进度回调 	soFarBytes
+blockComplete 	在完成前同步调用该方法，此时已经下载完成 	-
+retry 	重试之前把将要重试是第几次回调回来 	之所以重试遇到Throwable, 将要重试是第几次, soFarBytes
+completed 	完成整个下载过程 	-
+paused 	暂停下载 	soFarBytes
+error 	下载出现错误 	抛出的Throwable
+warn 	在下载队列中(正在等待/正在下载)已经存在相同下载连接与相同存储路径的任务 	-
+*/
         @Override
-        public void taskStart(@NonNull DownloadTask task, @NonNull Listener1Assist.Listener1Model model) {
-            Log.i("DownloadListener", "taskStart");
-        }
-
-        @Override
-        public void retry(@NonNull DownloadTask task, @NonNull ResumeFailedCause cause) {
-            Log.i("DownloadListener", cause.toString());
-        }
-
-        @Override
-        public void connected(@NonNull DownloadTask task, int blockCount, long currentOffset, long totalLength) {
-            Log.i("DownloadListener", task.getFilename());
-        }
-
-        @Override
-        public void progress(@NonNull DownloadTask task, long currentOffset, long totalLength) {
+        protected void pending(BaseDownloadTask task, int soFarBytes, int totalBytes) {
             Book b = (Book) task.getTag();
-            b.downloaProcess = String.valueOf(currentOffset*100/totalLength) + "%";
+            b.downloaProcess = getString(R.string.waiting);
             bookAdapter.notifyDataSetChanged();
         }
 
         @Override
-        public void taskEnd(@NonNull DownloadTask task, @NonNull EndCause cause, @Nullable Exception realCause, @NonNull Listener1Assist.Listener1Model model) {
-            if(EndCause.COMPLETED == cause) {
-                Book b = (Book) task.getTag();
-                b.downloaded = true;
-                b.downloaProcess = getThisActivity().getString(R.string.downoad_over);
-                bookPreferencesHelper.save(b);
-                bookAdapter.notifyDataSetChanged();
-            } else if(EndCause.ERROR == cause){
-                Book b = (Book) task.getTag();
-                b.downloaProcess = getThisActivity().getString(R.string.downoad_error);;
-                bookPreferencesHelper.save(b);
-                bookAdapter.notifyDataSetChanged();
-            }
+        protected void progress(BaseDownloadTask task, int soFarBytes, int totalBytes) {
+            Book b = (Book) task.getTag();
+            long d = soFarBytes;
+            long t = totalBytes;
+            b.downloaProcess = String.valueOf(d*100/t) + "%";
+            bookAdapter.notifyDataSetChanged();
+        }
+
+        @Override
+        protected void completed(BaseDownloadTask task) {
+            Book b = (Book) task.getTag();
+            b.downloaded = true;
+            b.downloaProcess = getThisActivity().getString(R.string.downoad_over);
+            bookPreferencesHelper.save(b);
+            bookAdapter.notifyDataSetChanged();
+        }
+
+        @Override
+        protected void paused(BaseDownloadTask task, int soFarBytes, int totalBytes) {
+            Book b = (Book) task.getTag();
+            b.downloaProcess = getString(R.string.paused);
+            bookAdapter.notifyDataSetChanged();
+        }
+
+        @Override
+        protected void error(BaseDownloadTask task, Throwable e) {
+            Book b = (Book) task.getTag();
+            b.downloaProcess = getThisActivity().getString(R.string.downoad_error);;
+            bookPreferencesHelper.save(b);
+            bookAdapter.notifyDataSetChanged();
+        }
+
+        @Override
+        protected void warn(BaseDownloadTask task) {
+            Book b = (Book) task.getTag();
+            b.downloaProcess = "Warm";
+            bookAdapter.notifyDataSetChanged();
         }
     };
 }

@@ -9,6 +9,7 @@ import android.util.DisplayMetrics;
 import android.view.WindowManager;
 
 import com.hwadzan.ebook.model.Host;
+import com.liulishuo.filedownloader.FileDownloader;
 import com.tencent.bugly.Bugly;
 
 import java.io.File;
@@ -16,12 +17,13 @@ import java.util.List;
 
 public class BookApplication extends Application {
 
-    public List<Host> hostList;
+    //public List<Host> hostList;
 
     @Override
     public void onCreate() {
         super.onCreate();
 
+        FileDownloader.setup(this);
         //bygly 1979710467
         //ks45i89f
         //app key : 857b9eee-3a37-48c7-aca1-1dc40f3ac47b

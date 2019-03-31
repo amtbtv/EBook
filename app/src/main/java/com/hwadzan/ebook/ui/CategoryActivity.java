@@ -32,6 +32,8 @@ import com.hwadzan.ebook.model.Host;
 import com.qmuiteam.qmui.util.QMUIStatusBarHelper;
 import com.qmuiteam.qmui.widget.QMUITopBarLayout;
 import com.qmuiteam.qmui.widget.dialog.QMUIBottomSheet;
+import com.qmuiteam.qmui.widget.dialog.QMUIDialog;
+import com.qmuiteam.qmui.widget.dialog.QMUIDialogAction;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -151,6 +153,7 @@ public class CategoryActivity extends AppCompatActivity {
             mask_layout.setVisibility(View.GONE);
     }
 
+    /*
     private void showSimpleBottomSheetList(final Book b) {
         // 从华藏下载PDF格式电子
         QMUIBottomSheet.BottomListSheetBuilder builder = new QMUIBottomSheet.BottomListSheetBuilder(getThisActivity());
@@ -177,6 +180,44 @@ public class CategoryActivity extends AppCompatActivity {
                 setResult(RESULT_OK, intent);
 
                 finish();
+            }
+        })
+                .build()
+                .show();
+    }
+    */
+
+    private void showSimpleBottomSheetList(final Book b) {
+        // 从华藏下载PDF格式电子
+        QMUIBottomSheet.BottomListSheetBuilder builder = new QMUIBottomSheet.BottomListSheetBuilder(getThisActivity());
+        builder.addItem(getString(R.string.ConfirmDownload));
+        builder.setOnSheetItemClickListener(new QMUIBottomSheet.BottomListSheetBuilder.OnSheetItemClickListener() {
+            @Override
+            public void onClick(QMUIBottomSheet dialog, View itemView, int position, String tag) {
+                dialog.dismiss();
+                if (b.pdf) {
+                    b.url = Constants.Make_DOWNLOAD_BOOK_URL("pdf", b.fabo_serial);
+                    b.fileName = b.fabo_serial + ".pdf";
+                    b.lastReadTime = new Date().getTime();
+                    //数据是使用Intent返回
+                    Intent intent = new Intent();
+                    //把返回数据存入Intent
+                    intent.putExtra("book", new Gson().toJson(b));
+                    //设置返回数据
+                    setResult(RESULT_OK, intent);
+                    finish();
+                } else {
+                    new QMUIDialog.MessageDialogBuilder(CategoryActivity.this)
+                            .setTitle(R.string.Prompt)
+                            .setMessage(R.string.UnsupportedBook)
+                            .addAction(R.string.ok, new QMUIDialogAction.ActionListener() {
+                                @Override
+                                public void onClick(QMUIDialog dialog, int index) {
+                                    dialog.dismiss();
+                                }
+                            })
+                            .show();
+                }
             }
         })
                 .build()
@@ -224,6 +265,7 @@ public class CategoryActivity extends AppCompatActivity {
      * 下载设计，下载为全自动下载，添加书籍后自动下载，没有下载完毕则下次启动后自动开始下载
      * */
 
+    /*
     private void downHostList(){
         OkHttpClient http = new OkHttpClient();
         Request request = new Request.Builder().url(Constants.HOST_URL).build();
@@ -239,6 +281,7 @@ public class CategoryActivity extends AppCompatActivity {
             }
         });
     }
+    */
 
     private void downCategoryList() {
         Request request = new Request.Builder().url(Constants.CATEGORY_URL).build();
@@ -256,7 +299,7 @@ public class CategoryActivity extends AppCompatActivity {
                     categoryAdatper = new CategoryAdatper();
                     final Category c = categoryList.get(0);
                     categoryAdatper.selectedAid = c.aid;
-                    downHostList();
+                    //downHostList();
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {

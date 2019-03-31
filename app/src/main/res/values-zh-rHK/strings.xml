@@ -29,4 +29,10 @@
     <string name="from_download">從%s下載%s</string>
     <string name="downoad_over">完成</string>
     <string name="downoad_error">下載出錯</string>
+    <string name="NoBookMessage">請點擊法寶選擇圖書</string>
+    <string name="ok">確定</string>
+    <string name="Prompt">提示</string>
+    <string name="UnsupportedBook">本類圖書暫不支持</string>
+    <string name="ConfirmDownload">確定下載選定圖書</string>
+    <string name="leftPage">向左翻頁</string>
 </resources>

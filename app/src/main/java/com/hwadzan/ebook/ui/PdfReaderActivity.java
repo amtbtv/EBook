@@ -2,6 +2,7 @@ package com.hwadzan.ebook.ui;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.view.ViewCompat;
@@ -23,8 +24,10 @@ import com.hwadzan.ebook.R;
 import com.hwadzan.ebook.lib.BookMarkPreferencesHelper;
 import com.hwadzan.ebook.lib.OnPositionClickListener;
 import com.hwadzan.ebook.lib.PdfLinearLayout;
+import com.hwadzan.ebook.lib.SettingPreferencesHelper;
 import com.hwadzan.ebook.model.Book;
 import com.hwadzan.ebook.model.BookMark;
+import com.hwadzan.ebook.model.Setting;
 import com.qmuiteam.qmui.util.QMUIDisplayHelper;
 import com.qmuiteam.qmui.util.QMUIStatusBarHelper;
 import com.qmuiteam.qmui.util.QMUIViewHelper;
@@ -47,10 +50,14 @@ public class PdfReaderActivity extends Activity {
     PDFView pdfView;
     SeekBar seekBarPage;
     Switch switchDayNight;
+    //Switch switchLeftPage;
     TextView process;
     TextView process_textView;
     private boolean isFullScreen;
     private FrameLayout mTabContainer;
+
+    SettingPreferencesHelper settingPreferencesHelper;
+    Setting setting;
 
     /*
         需要的功能
@@ -72,6 +79,9 @@ public class PdfReaderActivity extends Activity {
         Intent intent = getIntent();
         String json = intent.getStringExtra("book");
         book = new Gson().fromJson(json, Book.class);
+
+        settingPreferencesHelper = new SettingPreferencesHelper(this);
+        setting = settingPreferencesHelper.getSetting();
 
         bookMarkPreferencesHelper = new BookMarkPreferencesHelper(this);
         bookMark = bookMarkPreferencesHelper.getBookMark(book.fileName);
@@ -106,13 +116,32 @@ public class PdfReaderActivity extends Activity {
             }
         });
 
+        pdfView = (PDFView) findViewById(R.id.pdfView);
+/*
+       switchLeftPage = (Switch) findViewById(R.id.switchLeftPage);
+        switchLeftPage.setChecked(setting.isLeftPage);
+        pdfView.swi
+        switchLeftPage.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                setting.isNight = isChecked;
+                pdfView.setNightMode(isChecked);
+                setPdfViewBackColor(setting.isNight);
+                settingPreferencesHelper.save(setting);
+                pdfView.jumpTo(pdfView.getCurrentPage());
+            }
+        });
+        */
+
         switchDayNight = (Switch) findViewById(R.id.switchDayNight);
-        switchDayNight.setChecked(bookMark.isNight);
+        switchDayNight.setChecked(setting.isNight);
         switchDayNight.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                bookMark.isNight = isChecked;
+                setting.isNight = isChecked;
                 pdfView.setNightMode(isChecked);
+                setPdfViewBackColor(setting.isNight);
+                settingPreferencesHelper.save(setting);
                 pdfView.jumpTo(pdfView.getCurrentPage());
             }
         });
@@ -146,7 +175,6 @@ public class PdfReaderActivity extends Activity {
         });
 
 
-        pdfView = (PDFView) findViewById(R.id.pdfView);
 
         /*pdfView.fromUri(Uri)
 or
@@ -201,7 +229,7 @@ pdfView.fromAsset(String)
                 .pageSnap(true) // snap pages to screen boundaries
                 .pageFling(true) // make a fling change only a single page like ViewPager
                 .defaultPage(bookMark.page) // 初始化第一页
-                .nightMode(bookMark.isNight)
+                .nightMode(setting.isNight)
                 .onPageChange(new OnPageChangeListener() {
                     @Override
                     public void onPageChanged(int page, int pageCount) {
@@ -217,10 +245,15 @@ pdfView.fromAsset(String)
                     }
                 })
                 .load();
-
-        changeToFullScreen();
     }
 
+    private void setPdfViewBackColor(boolean isNight){
+        if(isNight){
+            pdfView.setBackgroundColor(Color.BLACK);
+        } else {
+            pdfView.setBackgroundColor(0xd4d6d8);
+        }
+    }
 
     Activity getThisActivity(){
         return this;

@@ -27,4 +27,10 @@
     <string name="from_download">从%s下载%s</string>
     <string name="downoad_over">完成</string>
     <string name="downoad_error">下载出错</string>
+    <string name="NoBookMessage">请点击法宝选择图书</string>
+    <string name="ok">确定</string>
+    <string name="Prompt">提示</string>
+    <string name="UnsupportedBook">本类图书暂不支持</string>
+    <string name="ConfirmDownload">确定下载选定图书</string>
+    <string name="leftPage">向左翻页</string>
 </resources>

@@ -6,5 +6,4 @@ package com.hwadzan.ebook.model;
  */
 public class BookMark {
     public int page = 0;
-    public boolean isNight = false;
 }

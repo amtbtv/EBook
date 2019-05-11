@@ -232,7 +232,12 @@ public class CategoryActivity extends AppCompatActivity {
         http.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getThisActivity(), R.string.category_content_network_fail, Toast.LENGTH_LONG).show();
+                    }
+                });
             }
 
             @Override
@@ -291,6 +296,12 @@ public class CategoryActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call call, IOException e) {
                 //Toast.makeText(getThisActivity(), R.string.category_fail, Toast.LENGTH_LONG).show();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getThisActivity(), R.string.category_network_fail, Toast.LENGTH_LONG).show();
+                    }
+                });
             }
 
             @Override

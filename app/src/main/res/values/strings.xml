@@ -31,8 +31,15 @@
     <string name="Prompt">提示</string>
     <string name="UnsupportedBook">本类图书暂不支持</string>
     <string name="ConfirmDownload">确定下载选定图书</string>
-    <string name="leftPage">向左翻页</string>
+    <string name="verticalPage">垂直翻页</string>
     <string name="downloadConfigFail">获取信息出错，请检测网络连接</string>
     <string name="downloadingConfig">正在获取信息，请稍等</string>
     <string name="noDownloadConfig">还未获取信息，请稍等</string>
+    <string name="switchVerticalPage">翻页方式改变，请重新打开电子书。</string>
+    <string name="guild_main_activity">点击法宝添加图书</string>
+    <string name="pre_page">上一页</string>
+    <string name="next_page">下一页</string>
+    <string name="show_menu">菜单</string>
+    <string name="category_content_network_fail">获取图书列表时网络出错</string>
+    <string name="category_network_fail">获取分类时网络出错</string>
 </resources>

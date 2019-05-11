@@ -6,8 +6,8 @@ android {
         applicationId "com.hwadzan.ebook"
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 2
-        versionName '1.1'
+        versionCode 3
+        versionName '1.2'
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         ndk {
             //设置支持的SO库架构
@@ -39,12 +39,13 @@ dependencies {
     implementation 'com.qmuiteam:qmui:1.1.11'
     implementation 'com.squareup.okhttp3:okhttp:3.12.1'
     implementation 'com.google.code.gson:gson:2.8.5'
-    implementation 'com.liulishuo.okdownload:sqlite:1.0.4'
-    implementation 'com.liulishuo.okdownload:okhttp:1.0.4'
+    implementation 'com.liulishuo.okdownload:sqlite:1.0.5'
+    implementation 'com.liulishuo.okdownload:okhttp:1.0.5'
     implementation 'com.github.barteksc:android-pdf-viewer:3.1.0-beta.1'
     implementation 'com.github.bumptech.glide:glide:4.8.0'
     implementation 'com.android.support:recyclerview-v7:28.0.0'
     implementation 'com.android.support:cardview-v7:28.0.0'
     implementation 'org.jetbrains:annotations-java5:15.0'
     implementation 'com.liulishuo.filedownloader:library:1.7.6'
+    implementation 'com.github.huburt-Hu:NewbieGuide:v2.4.0'
 }

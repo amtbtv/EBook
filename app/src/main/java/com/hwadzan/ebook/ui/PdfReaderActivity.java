@@ -3,8 +3,10 @@ package com.hwadzan.ebook.ui;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.PointF;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.view.ViewCompat;
 import android.view.View;
 import android.view.Window;
@@ -13,7 +15,10 @@ import android.widget.FrameLayout;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.app.hubert.guide.NewbieGuide;
+import com.app.hubert.guide.model.GuidePage;
 import com.github.barteksc.pdfviewer.PDFView;
 import com.github.barteksc.pdfviewer.listener.OnLoadCompleteListener;
 import com.github.barteksc.pdfviewer.listener.OnPageChangeListener;
@@ -41,6 +46,8 @@ public class PdfReaderActivity extends Activity {
 
     int screenWidth;
     int screenWidth3;
+    int screenHeight;
+    int screenHeight3;
 
     QMUITopBarLayout mTopBar;
     BookApplication app;
@@ -48,9 +55,12 @@ public class PdfReaderActivity extends Activity {
     BookMark bookMark;
     PdfLinearLayout pdf_layout;
     PDFView pdfView;
+
     SeekBar seekBarPage;
+    boolean isSeekBarTracking = false;
+
     Switch switchDayNight;
-    //Switch switchLeftPage;
+    Switch switchVerticalPage;
     TextView process;
     TextView process_textView;
     private boolean isFullScreen;
@@ -59,6 +69,7 @@ public class PdfReaderActivity extends Activity {
     SettingPreferencesHelper settingPreferencesHelper;
     Setting setting;
 
+    Handler handler;
     /*
         需要的功能
         1. 横屏竖屏 //可不做，用处不大
@@ -73,8 +84,12 @@ public class PdfReaderActivity extends Activity {
         setContentView(R.layout.activity_pdf_reader);
         QMUIStatusBarHelper.translucent(this);
 
+        handler = new Handler();
+
         screenWidth = QMUIDisplayHelper.getScreenWidth(this);
         screenWidth3 = screenWidth/3;
+        screenHeight = QMUIDisplayHelper.getScreenHeight(this);
+        screenHeight3 = screenHeight/3;
 
         Intent intent = getIntent();
         String json = intent.getStringExtra("book");
@@ -107,31 +122,29 @@ public class PdfReaderActivity extends Activity {
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
-
+                isSeekBarTracking = true;
             }
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-
+                isSeekBarTracking = false;
+                performPageSnap();
             }
         });
 
         pdfView = (PDFView) findViewById(R.id.pdfView);
-/*
-       switchLeftPage = (Switch) findViewById(R.id.switchLeftPage);
-        switchLeftPage.setChecked(setting.isLeftPage);
-        pdfView.swi
-        switchLeftPage.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+
+        switchVerticalPage = (Switch) findViewById(R.id.switchVerticalPage);
+        switchVerticalPage.setChecked(setting.isVerticalPage);
+        switchVerticalPage.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                setting.isNight = isChecked;
-                pdfView.setNightMode(isChecked);
-                setPdfViewBackColor(setting.isNight);
+                setting.isVerticalPage = isChecked;
                 settingPreferencesHelper.save(setting);
-                pdfView.jumpTo(pdfView.getCurrentPage());
+                Toast.makeText(PdfReaderActivity.this, R.string.switchVerticalPage, Toast.LENGTH_LONG).show();
             }
         });
-        */
+
 
         switchDayNight = (Switch) findViewById(R.id.switchDayNight);
         switchDayNight.setChecked(setting.isNight);
@@ -148,18 +161,34 @@ public class PdfReaderActivity extends Activity {
 
         pdf_layout.setOnPositionClickListener(new OnPositionClickListener() {
             @Override
-            public void onClick(View view, final float x, float y) {
+            public void onClick(View view, final float x, final float y) {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        if(x<screenWidth3 && isFullScreen){
+                        //根据
+                        float p;
+                        int sc;
+                        if(setting.isVerticalPage){
+                            p = y;
+                            sc = screenHeight3;
+                        } else {
+                            p=x;
+                            sc = screenWidth3;
+                        }
+
+                        if(p<sc && isFullScreen){
                             if(pdfView.getCurrentPage()>0) {
                                 pdfView.jumpTo(pdfView.getCurrentPage() - 1, true);
-
+                                //pdfView.pageFillsScreen();
+                                //pdfView.zoomCenteredRelativeTo();
+                                //pdfView.performPageSnap();
+                                //pdfView.zoomCenteredRelativeTo(1.0f, new PointF(0, 100f));
+                                //performPageSnap();
                             }
-                        } else if(x>screenWidth3*2 && isFullScreen){
+                        } else if(p>sc*2 && isFullScreen){
                             if(pdfView.getCurrentPage()<pdfView.getPageCount()-1) {
                                 pdfView.jumpTo(pdfView.getCurrentPage() + 1, true);
+                                //performPageSnap();
                             }
                         } else {
                             if(isFullScreen) {
@@ -223,8 +252,9 @@ pdfView.fromAsset(String)
         pdfView.fromFile(file)
                 .enableDoubletap(false) //双击不放大
                 .enableSwipe(true) // 允许手指滑动操作换页进度
-                .swipeHorizontal(true) //水平翻页
+                .swipeHorizontal(!setting.isVerticalPage) //水平翻页
                 .spacing(1) // 自动页间距
+                //.autoSpacing(true)
                 .pageFitPolicy(FitPolicy.BOTH) //页面适应屏幕大小
                 .pageSnap(true) // snap pages to screen boundaries
                 .pageFling(true) // make a fling change only a single page like ViewPager
@@ -235,6 +265,7 @@ pdfView.fromAsset(String)
                     public void onPageChanged(int page, int pageCount) {
                         process.setText(String.valueOf(page+1)+"/"+String.valueOf(pageCount));
                         process_textView.setText(String.valueOf(page+1)+"/"+String.valueOf(pageCount));
+                        performPageSnap();
                     }
                 })
                 .onLoad(new OnLoadCompleteListener() {
@@ -245,6 +276,33 @@ pdfView.fromAsset(String)
                     }
                 })
                 .load();
+
+
+        if(setting.isVerticalPage){
+            NewbieGuide.with(PdfReaderActivity.this)
+                    .setLabel("PdfReaderActivityGuide1_v")
+                    .setShowCounts(1)//控制次数
+                    .addGuidePage(GuidePage.newInstance()
+                            .setLayoutRes(R.layout.view_guide_activity_padreader_v))
+                    .show();
+        } else {
+            NewbieGuide.with(PdfReaderActivity.this)
+                    .setLabel("PdfReaderActivityGuide1_h")
+                    .setShowCounts(1)//控制次数
+                    .addGuidePage(GuidePage.newInstance()
+                            .setLayoutRes(R.layout.view_guide_activity_padreader_h))
+                    .show();
+        }
+    }
+
+    void performPageSnap(){
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if(!isSeekBarTracking)
+                    pdfView.performPageSnap();
+            }
+        }, 200);
     }
 
     private void setPdfViewBackColor(boolean isNight){

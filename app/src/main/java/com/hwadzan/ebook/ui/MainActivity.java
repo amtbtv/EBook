@@ -18,6 +18,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.app.hubert.guide.NewbieGuide;
+import com.app.hubert.guide.model.GuidePage;
 import com.bumptech.glide.Glide;
 import com.google.gson.Gson;
 import com.hwadzan.ebook.BookApplication;
@@ -25,7 +27,9 @@ import com.hwadzan.ebook.Constants;
 import com.hwadzan.ebook.R;
 import com.hwadzan.ebook.lib.BookMarkPreferencesHelper;
 import com.hwadzan.ebook.lib.BookPreferencesHelper;
+import com.hwadzan.ebook.lib.SettingPreferencesHelper;
 import com.hwadzan.ebook.model.Book;
+import com.hwadzan.ebook.model.Setting;
 import com.hwadzan.ebook.model.ibook_config;
 import com.liulishuo.filedownloader.BaseDownloadTask;
 import com.liulishuo.filedownloader.FileDownloadListener;
@@ -53,7 +57,9 @@ public class MainActivity extends AppCompatActivity {
     public static final int CategoryActivityREQUESTCODE = 805;
     QMUITopBarLayout mTopBar;
     BookApplication app;
+
     BookPreferencesHelper bookPreferencesHelper;
+
     List<Book> bookList;
     RecyclerView recyclerView;
     BookAdapter bookAdapter;
@@ -80,16 +86,16 @@ public class MainActivity extends AppCompatActivity {
         mTopBar = (QMUITopBarLayout) findViewById(R.id.topbar);
 
         imageWidth = QMUIDisplayHelper.getScreenWidth(this) / 3 - QMUIDisplayHelper.dp2px(this, 10);
-        imageHeight = imageWidth*228/150;
+        imageHeight = imageWidth * 228 / 150;
 
         mask_layout = (FrameLayout) findViewById(R.id.mask_layout);
 
         bookList = bookPreferencesHelper.getAll();
 
         recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
-        GridLayoutManager layoutManager=new GridLayoutManager(this,3);
+        GridLayoutManager layoutManager = new GridLayoutManager(this, 3);
         recyclerView.setLayoutManager(layoutManager);
-        bookAdapter=new BookAdapter();
+        bookAdapter = new BookAdapter();
         recyclerView.setAdapter(bookAdapter);
 
         initTopBar();
@@ -101,9 +107,17 @@ public class MainActivity extends AppCompatActivity {
 
         startDownload();
 
-        if(bookList.size()==0){
+        if (bookList.size() == 0) {
             showSelectBookDialog();
         }
+
+        NewbieGuide.with(MainActivity.this)
+                .setLabel("MainActivityGuide1")
+                .setShowCounts(1)//控制次数
+                //.alwaysShow(true)//总是显示，调试时可以打开
+                .addGuidePage(GuidePage.newInstance()
+                        .setLayoutRes(R.layout.view_guide_activity_main))
+                .show();
     }
 
     private void showMaskProcessBar(boolean show){

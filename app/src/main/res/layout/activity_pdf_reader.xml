@@ -52,14 +52,12 @@
             android:layout_height="48dp"
             android:gravity="center_vertical"
             android:padding="4dp">
-<!--
 
             <Switch
-                android:id="@+id/switchLeftPage"
+                android:id="@+id/switchVerticalPage"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/leftPage" />
--->
+                android:text="@string/verticalPage" />
 
             <TextView
                 android:id="@+id/process"

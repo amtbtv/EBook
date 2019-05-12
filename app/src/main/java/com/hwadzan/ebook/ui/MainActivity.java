@@ -42,6 +42,8 @@ import com.qmuiteam.qmui.widget.dialog.QMUIBottomSheet;
 import com.qmuiteam.qmui.widget.dialog.QMUIDialog;
 import com.qmuiteam.qmui.widget.dialog.QMUIDialogAction;
 
+import org.lzh.framework.updatepluginlib.UpdateBuilder;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
@@ -118,6 +120,9 @@ public class MainActivity extends AppCompatActivity {
                 .addGuidePage(GuidePage.newInstance()
                         .setLayoutRes(R.layout.view_guide_activity_main))
                 .show();
+
+        //每次打开首页检测更新
+        UpdateBuilder.create().check();// 启动更新任务
     }
 
     private void showMaskProcessBar(boolean show){

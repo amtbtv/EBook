@@ -4,6 +4,8 @@ import java.util.Locale;
 
 public class Constants {
 
+    public static final String Upgrade_Url = "https://amtbapi.amtb.cn/upgradeEBook.json";
+
     public static final String IBOOK_CONFIG_URL_CN = "https://amtbapi.amtb.cn/ibook_config";
     public static final String IBOOK_CONFIG_URL_TW = "https://amtbapi.amtb.de/ibook_config";
 

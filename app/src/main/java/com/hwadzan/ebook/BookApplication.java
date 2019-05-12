@@ -8,9 +8,14 @@ import android.os.Environment;
 import android.util.DisplayMetrics;
 import android.view.WindowManager;
 
-import com.hwadzan.ebook.model.Host;
+//import com.hwadzan.ebook.model.Host;
+import com.google.gson.Gson;
 import com.liulishuo.filedownloader.FileDownloader;
-import com.tencent.bugly.Bugly;
+//import com.tencent.bugly.Bugly;
+
+import org.lzh.framework.updatepluginlib.UpdateConfig;
+import org.lzh.framework.updatepluginlib.base.UpdateParser;
+import org.lzh.framework.updatepluginlib.model.Update;
 
 import java.io.File;
 import java.util.List;
@@ -27,8 +32,17 @@ public class BookApplication extends Application {
         //bygly 1979710467
         //ks45i89f
         //app key : 857b9eee-3a37-48c7-aca1-1dc40f3ac47b
-        Bugly.init(getApplicationContext(), "f456fb17ee", true);
+        //Bugly.init(getApplicationContext(), "f456fb17ee", true);
 
+        UpdateConfig.getConfig()
+                .setUrl(Constants.Upgrade_Url)// 配置检查更新的API接口
+                .setUpdateParser(new UpdateParser() {
+                    @Override
+                    public Update parse(String response) throws Exception {
+                        Update update = new Gson().fromJson(response, Update.class);
+                        return update;
+                    }
+                });
     }
 
     public File getFileDirFun(String type) {

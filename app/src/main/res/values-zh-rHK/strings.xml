@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">華藏電子書</string>
+    <string name="app_name">華藏數位法寶</string>
     <string name="about_us_content" formatted="false">
-        華藏凈宗弘化網app，提供凈空老法師,悟道法師,徐醒民老師,鐘茂森老師,蔡禮旭老師,胡小林老師,鐘茂森老師,周泳杉老師等大德歷年影音資料的在線播放與下載服務。\n
-        公開授權大眾流通及下載閱讀。不得擅自加註版權所有，任意增減內容，非法牟利，侵害公眾權益及原著本意。\n\n
-        http://www.hwadzan.com/ \n\n
+        華藏數位法寶APP，提供儒释道數位法寶電子書下載和閱讀，方便淨宗蓮友利用科技產品深入經藏。\n\n
+        https://www.hwadzan.tv/ \n\n
         社團法人中華華藏凈宗學會 \n 臺北市大安區信義路四段333-1號2樓 \n
         財團法人華藏凈宗弘化基金會 \n 臺北市大安區信義路四段341號5樓 \n
-        TEL:02-27547178　FAX:02-27547262 \n
+        TEL:+886-2-27547178　FAX:+886-2-27547262 \n
         E-MAIL:amtb@hwadzan.com
     </string>
     <string name="search_hint">搜索</string>
@@ -36,11 +35,15 @@
     <string name="downloadConfigFail">獲取信息出錯，請檢測網絡連接</string>
     <string name="downloadingConfig">正在獲取信息，請稍等</string>
     <string name="noDownloadConfig">還未獲取信息，請稍等</string>
-    <string name="switchVerticalPage">翻頁方式改變，請重新打開電子書。</string>
+    <string name="switchVerticalPage">翻頁方式改變，請重新打開電子書</string>
     <string name="guild_main_activity">點擊法寶添加圖書</string>
     <string name="pre_page">上壹頁</string>
     <string name="next_page">下壹頁</string>
     <string name="show_menu">菜單</string>
     <string name="category_content_network_fail">獲取圖書列表時網絡出錯</string>
-    <string name="category_network_fail">獲取分類時網絡出錯</string>
+    <string name="category_network_fail">獲取分類時網絡出錯，是否重新下載？</string>
+    <string name="NoNetworkConnected">未連接網站，僅能觀看已下載法寶</string>
+    <string name="DownConfigFail">下载服务器信息出错，僅能觀看已下載法寶。是否重新下載？</string>
+    <string name="ReDown">重新下載</string>
+    <string name="Cancle">取消</string>
 </resources>

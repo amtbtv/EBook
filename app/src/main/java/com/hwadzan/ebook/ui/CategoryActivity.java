@@ -299,7 +299,8 @@ public class CategoryActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(getThisActivity(), R.string.category_network_fail, Toast.LENGTH_LONG).show();
+                        //Toast.makeText(getThisActivity(), R.string.category_network_fail, Toast.LENGTH_LONG).show();
+                        showDownCategoryFailDialog();
                     }
                 });
             }
@@ -321,10 +322,35 @@ public class CategoryActivity extends AppCompatActivity {
                         }
                     });
                 } else {
-                    Toast.makeText(getThisActivity(), R.string.category_fail, Toast.LENGTH_LONG).show();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            //Toast.makeText(getThisActivity(), R.string.category_network_fail, Toast.LENGTH_LONG).show();
+                            showDownCategoryFailDialog();
+                        }
+                    });
                 }
             }
         });
+    }
+
+    void showDownCategoryFailDialog(){
+        new QMUIDialog.MessageDialogBuilder(CategoryActivity.this)
+                .setTitle(R.string.Prompt)
+                .setMessage(R.string.category_network_fail)
+                .addAction(R.string.ReDown, new QMUIDialogAction.ActionListener() {
+                    @Override
+                    public void onClick(QMUIDialog dialog, int index) {
+                        downCategoryList();
+                    }
+                })
+                .addAction(R.string.Cancle, new QMUIDialogAction.ActionListener() {
+                    @Override
+                    public void onClick(QMUIDialog dialog, int index) {
+                        dialog.dismiss();
+                    }
+                })
+                .show();
     }
 
     Activity getThisActivity(){

@@ -1,12 +1,11 @@
 <resources>
-    <string name="app_name">华藏电子书</string>
+    <string name="app_name">华藏数位法宝</string>
     <string name="about_us_content" formatted="false">
-        华藏净宗弘化网app，提供净空老法师,悟道法师,徐醒民老师,钟茂森老师,蔡礼旭老师,胡小林老师,钟茂森老师,周泳杉老师等大德历年影音资料的在线播放与下载服务。\n
-        公开授权大众流通及下载阅读。不得擅自加注版权所有，任意增减内容，非法牟利，侵害公众权益及原著本意。\n\n
-        http://www.hwadzan.com/ \n\n
+        华藏数位法宝APP，提供儒释道数位法宝电子书下载和阅读，方便淨宗莲友利用科技产品深入经藏。\n\n
+        https://www.hwadzan.tv/ \n\n
         社团法人中华华藏净宗学会 \n 台北市大安区信义路四段333-1号2楼 \n
         财团法人华藏净宗弘化基金会 \n 台北市大安区信义路四段341号5楼 \n
-        TEL:02-27547178　FAX:02-27547262 \n
+        TEL:+886-2-27547178　FAX:+886-2-27547262 \n
         E-MAIL:amtb@hwadzan.com
     </string>
     <string name="search_hint">搜索</string>
@@ -35,11 +34,15 @@
     <string name="downloadConfigFail">获取信息出错，请检测网络连接</string>
     <string name="downloadingConfig">正在获取信息，请稍等</string>
     <string name="noDownloadConfig">还未获取信息，请稍等</string>
-    <string name="switchVerticalPage">翻页方式改变，请重新打开电子书。</string>
+    <string name="switchVerticalPage">翻页方式改变，请重新打开电子书</string>
     <string name="guild_main_activity">点击法宝添加图书</string>
     <string name="pre_page">上一页</string>
     <string name="next_page">下一页</string>
     <string name="show_menu">菜单</string>
     <string name="category_content_network_fail">获取图书列表时网络出错</string>
-    <string name="category_network_fail">获取分类时网络出错</string>
+    <string name="category_network_fail">获取分类时网络出错，是否重新下载？</string>
+    <string name="NoNetworkConnected">未连接网站，仅能观看已下载法宝</string>
+    <string name="DownConfigFail">下载服务器信息出错，仅能观看已下载法宝。是否重新下载？</string>
+    <string name="ReDown">重新下载</string>
+    <string name="Cancle">取消</string>
 </resources>

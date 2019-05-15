@@ -48,6 +48,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.TreeSet;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -72,7 +73,11 @@ public class MainActivity extends AppCompatActivity {
     int imageWidth;
     int imageHeight;
 
-    int downloadConfigState = 0; // 0 未下载， 1 正在下载, 2 下载出错,  3 下载成功
+    /**
+     * 0 未下载默认， 1 正在下载, 2 下载出错,  3 下载成功
+     */
+    int downloadConfigState = 0;
+    TreeSet<String> downloadConfigSet = new TreeSet<>();
 
     FrameLayout mask_layout;
 
@@ -107,12 +112,14 @@ public class MainActivity extends AppCompatActivity {
         if (!parentFile.exists())
             parentFile.mkdirs();
 
+        //下载配制信息
         startDownload();
 
         if (bookList.size() == 0) {
             showSelectBookDialog();
         }
 
+        /*
         NewbieGuide.with(MainActivity.this)
                 .setLabel("MainActivityGuide1")
                 .setShowCounts(1)//控制次数
@@ -120,7 +127,7 @@ public class MainActivity extends AppCompatActivity {
                 .addGuidePage(GuidePage.newInstance()
                         .setLayoutRes(R.layout.view_guide_activity_main))
                 .show();
-
+        */
         //每次打开首页检测更新
         UpdateBuilder.create().check();// 启动更新任务
     }
@@ -192,11 +199,12 @@ public class MainActivity extends AppCompatActivity {
                 .setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
+                        // 0 未下载默认， 1 正在下载, 2 下载出错,  3 下载成功
                         if(downloadConfigState==3) {
                             startActivityForResult(new Intent(getThisActivity(), CategoryActivity.class), CategoryActivityREQUESTCODE);
                         } else {
                             if(downloadConfigState == 2){
-                                Toast.makeText(getThisActivity(), getString(R.string.downloadConfigFail), Toast.LENGTH_LONG).show();
+                                showReDonConfigDialog();
                             } else if(downloadConfigState == 1){
                                 Toast.makeText(getThisActivity(), getString(R.string.downloadingConfig), Toast.LENGTH_LONG).show();
                             } else if(downloadConfigState == 0){
@@ -342,30 +350,62 @@ public class MainActivity extends AppCompatActivity {
         serialQueue.enqueue(task);
     }
 
+    /**
+     * 下载配制信息出错，显示对话框，重新下载
+     */
+    void showReDonConfigDialog(){
+        new QMUIDialog.MessageDialogBuilder(MainActivity.this)
+                .setTitle(R.string.Prompt)
+                .setMessage(R.string.DownConfigFail)
+                .addAction(R.string.ReDown, new QMUIDialogAction.ActionListener() {
+                    @Override
+                    public void onClick(QMUIDialog dialog, int index) {
+                        startDownload();
+                    }
+                })
+                .addAction(R.string.Cancle, new QMUIDialogAction.ActionListener() {
+                    @Override
+                    public void onClick(QMUIDialog dialog, int index) {
+                        dialog.dismiss();
+                    }
+                })
+                .show();
+    }
+
+    /**
+     * 下载配制信息的回调函数
+     */
     Callback downConfigCallback = new Callback() {
         @Override
         public void onFailure(Call call, IOException e) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if(Constants.domain.isEmpty()) {
-                        downloadConfigState = 2; //下载出错
+            String url = call.request().url().toString();
+            downloadConfigSet.remove(url);
+            if(downloadConfigSet.size()==0 && Constants.domain.isEmpty()) {
+                downloadConfigState = 2; //下载出错
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        showReDonConfigDialog();
                     }
-                }
-            });
+                });
+            }
         }
 
         @Override
         public void onResponse(Call call, Response response) throws IOException {
             String json = response.body().string();
             ibook_config config = new Gson().fromJson(json, ibook_config.class);
+            String url = call.request().url().toString();
+            downloadConfigSet.remove(url);
             if(Constants.domain.isEmpty()) {
                 Constants.domain = config.domain;
                 Constants.download = config.download;
                 downloadConfigState = 3; //下载成功
+
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+                        //开始下载未下载完成的电子图书
                         if(serialQueue==null) {
                             serialQueue = new FileDownloadSerialQueue();
                             File pdfDir = app.getFileDirFun("pdf");
@@ -394,8 +434,22 @@ public class MainActivity extends AppCompatActivity {
         if(app.isNetworkConnected()) {
             downloadConfigState = 1; //正在下载
             OkHttpClient http = new OkHttpClient();
+            downloadConfigSet.clear();
+            downloadConfigSet.add(Constants.IBOOK_CONFIG_URL_TW);
+            downloadConfigSet.add(Constants.IBOOK_CONFIG_URL_CN);
             http.newCall(new Request.Builder().url(Constants.IBOOK_CONFIG_URL_TW).build()).enqueue(downConfigCallback);
             http.newCall(new Request.Builder().url(Constants.IBOOK_CONFIG_URL_CN).build()).enqueue(downConfigCallback);
+        } else {
+            new QMUIDialog.MessageDialogBuilder(MainActivity.this)
+                    .setTitle(R.string.Prompt)
+                    .setMessage(R.string.NoNetworkConnected)
+                    .addAction(R.string.ok, new QMUIDialogAction.ActionListener() {
+                        @Override
+                        public void onClick(QMUIDialog dialog, int index) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .show();
         }
     }
 

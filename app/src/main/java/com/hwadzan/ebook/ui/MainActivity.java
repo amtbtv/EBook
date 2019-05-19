@@ -10,6 +10,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -59,6 +60,8 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity {
+    private static boolean updateChecked = false;
+
     public static final int CategoryActivityREQUESTCODE = 805;
     QMUITopBarLayout mTopBar;
     BookApplication app;
@@ -75,10 +78,6 @@ public class MainActivity extends AppCompatActivity {
     int imageWidth;
     int imageHeight;
 
-    /**
-     * 0 未下载默认， 1 正在下载, 2 下载出错,  3 下载成功
-     */
-    int downloadConfigState = 0;
     boolean downloadConfigAfterStartFaoBaoActivity = false;
 
     FrameLayout mask_layout;
@@ -117,15 +116,24 @@ public class MainActivity extends AppCompatActivity {
         if (!parentFile.exists())
             parentFile.mkdirs();
 
-        //下载配制信息
-        startDownload();
-
         if (bookList.size() == 0) {
             showSelectBookDialog();
         }
 
-        //每次打开首页检测更新
-        UpdateBuilder.create().check();// 启动更新任务
+        //如果下载失败或从未下载，则开始下载配制
+        if(app.downloadConfigState != 3) {
+            //下载配制信息
+            startDownload();
+        } else {
+            Log.i("DownloadConfig", Constants.domain);
+            Log.i("DownloadConfig", Constants.download);
+        }
+
+        if(!updateChecked) {
+            updateChecked = true;
+            //每次打开首页检测更新
+            UpdateBuilder.create().check();// 启动更新任务
+        }
     }
 
     /**
@@ -217,17 +225,17 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 // 0 未下载默认， 1 正在下载, 2 下载出错,  3 下载成功
-                if (downloadConfigState == 3) {
+                if (app.downloadConfigState == 3) {
                     startActivityForResult(new Intent(getThisActivity(), CategoryActivity.class), CategoryActivityREQUESTCODE);
                 } else {
-                    if (downloadConfigState == 2) {
+                    if (app.downloadConfigState == 2) {
                         downloadConfigAfterStartFaoBaoActivity = true;
                         Toast.makeText(getThisActivity(), getString(R.string.downloadingConfig), Toast.LENGTH_LONG).show();
                         startDownload();
-                    } else if (downloadConfigState == 1) {
+                    } else if (app.downloadConfigState == 1) {
                         downloadConfigAfterStartFaoBaoActivity = true;
                         Toast.makeText(getThisActivity(), getString(R.string.downloadingConfig), Toast.LENGTH_LONG).show();
-                    } else if (downloadConfigState == 0) {
+                    } else if (app.downloadConfigState == 0) {
                         //不可能等于0
                     }
                 }
@@ -407,7 +415,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void tackFile(File file) {
             if(file==null){
-                downloadConfigState = 2; //下载出错
+                app.downloadConfigState = 2; //下载出错
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -420,7 +428,7 @@ public class MainActivity extends AppCompatActivity {
                 ibook_config config = paraseConfigFile(file);
                 Constants.domain = config.domain;
                 Constants.download = config.download;
-                downloadConfigState = 3; //下载成功
+                app.downloadConfigState = 3; //下载成功
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -478,7 +486,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }).execute("www.baidu.com");
 */
-            downloadConfigState = 1; //下载成功
+            app.downloadConfigState = 1; //开始下载，正在下载中
             //真正的开始下载配制文件
             startDownloadConfig();
         } else {

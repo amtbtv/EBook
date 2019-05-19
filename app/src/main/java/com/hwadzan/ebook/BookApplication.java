@@ -29,6 +29,11 @@ public class BookApplication extends Application {
     public boolean isHttpConnected = false;
     public CacheOKHttp http;
 
+    /**
+     * 0 未下载默认， 1 正在下载, 2 下载出错,  3 下载成功
+     */
+    public int downloadConfigState = 0;
+
     @Override
     public void onCreate() {
         super.onCreate();

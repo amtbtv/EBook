@@ -8,25 +8,32 @@ import android.os.Environment;
 import android.util.DisplayMetrics;
 import android.view.WindowManager;
 
-//import com.hwadzan.ebook.model.Host;
 import com.google.gson.Gson;
+import com.hwadzan.ebook.lib.CacheOKHttp;
 import com.liulishuo.filedownloader.FileDownloader;
-//import com.tencent.bugly.Bugly;
 
 import org.lzh.framework.updatepluginlib.UpdateConfig;
 import org.lzh.framework.updatepluginlib.base.UpdateParser;
 import org.lzh.framework.updatepluginlib.model.Update;
 
+import java.io.BufferedReader;
 import java.io.File;
-import java.util.List;
+import java.io.FileReader;
+import java.io.Reader;
+
+//import com.hwadzan.ebook.model.Host;
+//import com.tencent.bugly.Bugly;
 
 public class BookApplication extends Application {
 
-    //public List<Host> hostList;
+    public boolean isHttpConnected = false;
+    public CacheOKHttp http;
 
     @Override
     public void onCreate() {
         super.onCreate();
+
+        http = new CacheOKHttp(this, "json");
 
         FileDownloader.setup(this);
         //bygly 1979710467
@@ -55,6 +62,30 @@ public class BookApplication extends Application {
             fileDir = getFilesDir();
         }
         return fileDir;
+    }
+
+    public static String readFile(File file) {
+        Reader read = null;
+        String content = "";
+        String result = "";
+        BufferedReader br = null;
+        try {
+            read = new FileReader(file);
+            br = new BufferedReader(read);
+            while ((content = br.readLine().trim()) != null) {
+                result += content + "\r\n";
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                read.close();
+                br.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return result;
     }
 
     public File getCacheDirFun() {

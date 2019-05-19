@@ -25,6 +25,8 @@ import com.google.gson.reflect.TypeToken;
 import com.hwadzan.ebook.BookApplication;
 import com.hwadzan.ebook.Constants;
 import com.hwadzan.ebook.R;
+import com.hwadzan.ebook.lib.CacheResult;
+import com.hwadzan.ebook.lib.GlideApp;
 import com.hwadzan.ebook.lib.TW2CN;
 import com.hwadzan.ebook.model.Book;
 import com.hwadzan.ebook.model.Category;
@@ -35,6 +37,7 @@ import com.qmuiteam.qmui.widget.dialog.QMUIBottomSheet;
 import com.qmuiteam.qmui.widget.dialog.QMUIDialog;
 import com.qmuiteam.qmui.widget.dialog.QMUIDialogAction;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -63,8 +66,6 @@ public class CategoryActivity extends AppCompatActivity {
     BooksAdatper booksAdatper;
 
     BookApplication app;
-
-    OkHttpClient http;
 
     TW2CN tw2CN;
 
@@ -140,8 +141,6 @@ public class CategoryActivity extends AppCompatActivity {
                 showSimpleBottomSheetList(b);
             }
         });
-
-        http = new OkHttpClient();
 
         showMaskProcessBar(true);
         downCategoryList();
@@ -228,45 +227,50 @@ public class CategoryActivity extends AppCompatActivity {
 
     private void downCategoryContentList(Category c){
         mTopBar.setTitle(c.name);
-        Request request = new Request.Builder().url(Constants.Make_BOOKS_URL(c.aid)).build();
-        http.newCall(request).enqueue(new Callback() {
+        String fileName = String.valueOf(c.aid) + ".json";
+        File tmpFile = app.http.asyncTakeFile(Constants.Make_BOOKS_URL(c.aid), fileName, new CacheResult() {
             @Override
-            public void onFailure(Call call, IOException e) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(getThisActivity(), R.string.category_content_network_fail, Toast.LENGTH_LONG).show();
-                    }
-                });
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                String json = response.body().string();
-                bookList = new Gson().fromJson(json,new TypeToken<List<Book>>(){}.getType());
-                bookListFilter.clear();
-                bookListFilter.addAll(bookList);
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if(bookList!=null && bookList.size()>0){
-                            if(booksAdatper==null) {
-                                booksAdatper = new BooksAdatper();
-                                content_lv.setAdapter(booksAdatper);
-                            }else {
-                                booksAdatper.notifyDataSetChanged();
-                            }
-                        } else {
-                            Toast.makeText(getThisActivity(), R.string.category_content_fail, Toast.LENGTH_LONG).show();
+            public void tackFile(File file) {
+                if(file==null){
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(getThisActivity(), R.string.category_content_network_fail, Toast.LENGTH_LONG).show();
                         }
-                        showMaskProcessBar(false);
-                    }
-                });
+                    });
+                } else {
+                    resetBookList(file);
+                }
+            }
+        });
 
+        if(tmpFile!=null){
+            resetBookList(tmpFile);
+        }
+    }
+
+    private void resetBookList(File file){
+        String json = BookApplication.readFile(file);
+        bookList = new Gson().fromJson(json,new TypeToken<List<Book>>(){}.getType());
+        bookListFilter.clear();
+        bookListFilter.addAll(bookList);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if(bookList!=null && bookList.size()>0){
+                    if(booksAdatper==null) {
+                        booksAdatper = new BooksAdatper();
+                        content_lv.setAdapter(booksAdatper);
+                    }else {
+                        booksAdatper.notifyDataSetChanged();
+                    }
+                } else {
+                    Toast.makeText(getThisActivity(), R.string.category_content_fail, Toast.LENGTH_LONG).show();
+                }
+                showMaskProcessBar(false);
             }
         });
     }
-
 
     /*
      * 下载设计，下载为全自动下载，添加书籍后自动下载，没有下载完毕则下次启动后自动开始下载
@@ -291,47 +295,52 @@ public class CategoryActivity extends AppCompatActivity {
     */
 
     private void downCategoryList() {
-        final Request request = new Request.Builder().url(Constants.CATEGORY_URL()).build();
-        http.newCall(request).enqueue(new Callback() {
+        String fileName = "CATEGORY.json";
+        File tmpFile = app.http.asyncTakeFile(Constants.CATEGORY_URL(), fileName, new CacheResult() {
             @Override
-            public void onFailure(Call call, IOException e) {
-                //Toast.makeText(getThisActivity(), R.string.category_fail, Toast.LENGTH_LONG).show();
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        //Toast.makeText(getThisActivity(), R.string.category_network_fail, Toast.LENGTH_LONG).show();
-                        showDownCategoryFailDialog();
-                    }
-                });
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                String json = response.body().string();
-                categoryList = new Gson().fromJson(json,new TypeToken<List<Category>>(){}.getType());
-                if(categoryList!=null && categoryList.size()>0){
-                    categoryAdatper = new CategoryAdatper();
-                    final Category c = categoryList.get(0);
-                    categoryAdatper.selectedAid = c.aid;
-                    //downHostList();
+            public void tackFile(File file) {
+                if(file==null){
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            category_lv.setAdapter(categoryAdatper);
-                            downCategoryContentList(c);
-                        }
-                    });
-                } else {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            //Toast.makeText(getThisActivity(), R.string.category_network_fail, Toast.LENGTH_LONG).show();
                             showDownCategoryFailDialog();
                         }
                     });
+                } else {
+                    resetCategoryList(file);
                 }
             }
         });
+
+        if(tmpFile!=null){
+            resetCategoryList(tmpFile);
+        }
+    }
+
+    private void resetCategoryList(File file){
+        String json = BookApplication.readFile(file);
+        categoryList = new Gson().fromJson(json,new TypeToken<List<Category>>(){}.getType());
+        if(categoryList!=null && categoryList.size()>0){
+            categoryAdatper = new CategoryAdatper();
+            final Category c = categoryList.get(0);
+            categoryAdatper.selectedAid = c.aid;
+            //downHostList();
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    category_lv.setAdapter(categoryAdatper);
+                    downCategoryContentList(c);
+                }
+            });
+        } else {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    //Toast.makeText(getThisActivity(), R.string.category_network_fail, Toast.LENGTH_LONG).show();
+                    showDownCategoryFailDialog();
+                }
+            });
+        }
     }
 
     void showDownCategoryFailDialog(){
@@ -436,7 +445,7 @@ public class CategoryActivity extends AppCompatActivity {
             convertView.setTag(b);
 
             ImageView imageView = (ImageView) convertView.findViewById(R.id.imageView);
-            Glide.with(getThisActivity())
+            GlideApp.with(getThisActivity())
                     .load(b.img_s)
                     .into(imageView);
 

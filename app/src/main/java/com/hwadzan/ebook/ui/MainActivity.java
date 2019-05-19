@@ -1,6 +1,7 @@
 package com.hwadzan.ebook.ui;
 
 import android.app.Activity;
+import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -9,17 +10,17 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.app.hubert.guide.NewbieGuide;
-import com.app.hubert.guide.model.GuidePage;
 import com.bumptech.glide.Glide;
 import com.google.gson.Gson;
 import com.hwadzan.ebook.BookApplication;
@@ -27,9 +28,11 @@ import com.hwadzan.ebook.Constants;
 import com.hwadzan.ebook.R;
 import com.hwadzan.ebook.lib.BookMarkPreferencesHelper;
 import com.hwadzan.ebook.lib.BookPreferencesHelper;
-import com.hwadzan.ebook.lib.SettingPreferencesHelper;
+import com.hwadzan.ebook.lib.CacheResult;
+import com.hwadzan.ebook.lib.GlideApp;
+import com.hwadzan.ebook.lib.PingCallBack;
+import com.hwadzan.ebook.lib.PingTask;
 import com.hwadzan.ebook.model.Book;
-import com.hwadzan.ebook.model.Setting;
 import com.hwadzan.ebook.model.ibook_config;
 import com.liulishuo.filedownloader.BaseDownloadTask;
 import com.liulishuo.filedownloader.FileDownloadListener;
@@ -41,7 +44,6 @@ import com.qmuiteam.qmui.widget.QMUITopBarLayout;
 import com.qmuiteam.qmui.widget.dialog.QMUIBottomSheet;
 import com.qmuiteam.qmui.widget.dialog.QMUIDialog;
 import com.qmuiteam.qmui.widget.dialog.QMUIDialogAction;
-
 import org.lzh.framework.updatepluginlib.UpdateBuilder;
 
 import java.io.File;
@@ -77,9 +79,12 @@ public class MainActivity extends AppCompatActivity {
      * 0 未下载默认， 1 正在下载, 2 下载出错,  3 下载成功
      */
     int downloadConfigState = 0;
-    TreeSet<String> downloadConfigSet = new TreeSet<>();
+    boolean downloadConfigAfterStartFaoBaoActivity = false;
 
     FrameLayout mask_layout;
+
+    Button fabaoButton;
+    AlphaAnimation fabaoButtonAlphaAnimation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,17 +124,29 @@ public class MainActivity extends AppCompatActivity {
             showSelectBookDialog();
         }
 
-        /*
-        NewbieGuide.with(MainActivity.this)
-                .setLabel("MainActivityGuide1")
-                .setShowCounts(1)//控制次数
-                //.alwaysShow(true)//总是显示，调试时可以打开
-                .addGuidePage(GuidePage.newInstance()
-                        .setLayoutRes(R.layout.view_guide_activity_main))
-                .show();
-        */
         //每次打开首页检测更新
         UpdateBuilder.create().check();// 启动更新任务
+    }
+
+    /**
+     * 开启法宝按扭动画
+     */
+    public void startFabBaoButtonAnimat() {
+/*
+    闪烁动画
+    开始闪烁
+    setDuration 设置闪烁一次的时间
+    setRepeatCount 设置闪烁次数 可以是具体数值，也可以是Animation.INFINITE（重复多次）
+    setRepeatMode 动画结束后从头开始或从末尾开始
+        Animation.REVERSE（从末尾开始） Animation.RESTART（从头开始）
+    setAnimation将设置的动画添加到view上
+ */
+        fabaoButtonAlphaAnimation = new AlphaAnimation(0.1f, 1.0f);
+        fabaoButtonAlphaAnimation.setDuration(1000);
+        fabaoButtonAlphaAnimation.setRepeatCount(Animation.INFINITE);
+        fabaoButtonAlphaAnimation.setRepeatMode(Animation.RESTART);
+        fabaoButton.setAnimation(fabaoButtonAlphaAnimation);
+        fabaoButtonAlphaAnimation.start();
     }
 
     private void showMaskProcessBar(boolean show){
@@ -182,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
         return this;
     }
 
-    void initTopBar(){
+    void initTopBar() {
         mTopBar.setTitle(getString(R.string.app_name));
         // 切换其他情况的按钮
 
@@ -195,24 +212,27 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
 
-        mTopBar.addRightTextButton(R.string.fabao, R.id.topbar_right_add_fabao_button)
-                .setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        // 0 未下载默认， 1 正在下载, 2 下载出错,  3 下载成功
-                        if(downloadConfigState==3) {
-                            startActivityForResult(new Intent(getThisActivity(), CategoryActivity.class), CategoryActivityREQUESTCODE);
-                        } else {
-                            if(downloadConfigState == 2){
-                                showReDonConfigDialog();
-                            } else if(downloadConfigState == 1){
-                                Toast.makeText(getThisActivity(), getString(R.string.downloadingConfig), Toast.LENGTH_LONG).show();
-                            } else if(downloadConfigState == 0){
-                                Toast.makeText(getThisActivity(), getString(R.string.noDownloadConfig), Toast.LENGTH_LONG).show();
-                            }
-                        }
+        fabaoButton = mTopBar.addRightTextButton(R.string.fabao, R.id.topbar_right_add_fabao_button);
+        fabaoButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // 0 未下载默认， 1 正在下载, 2 下载出错,  3 下载成功
+                if (downloadConfigState == 3) {
+                    startActivityForResult(new Intent(getThisActivity(), CategoryActivity.class), CategoryActivityREQUESTCODE);
+                } else {
+                    if (downloadConfigState == 2) {
+                        downloadConfigAfterStartFaoBaoActivity = true;
+                        Toast.makeText(getThisActivity(), getString(R.string.downloadingConfig), Toast.LENGTH_LONG).show();
+                        startDownload();
+                    } else if (downloadConfigState == 1) {
+                        downloadConfigAfterStartFaoBaoActivity = true;
+                        Toast.makeText(getThisActivity(), getString(R.string.downloadingConfig), Toast.LENGTH_LONG).show();
+                    } else if (downloadConfigState == 0) {
+                        //不可能等于0
                     }
-                });
+                }
+            }
+        });
 
 /*
 仅有两个按扭，没必要使用底部菜单了
@@ -248,6 +268,7 @@ public class MainActivity extends AppCompatActivity {
                 .build().show();
     }
 */
+
     private class BookAdapter extends RecyclerView.Adapter<BookViewHolder> {
         private Context mContext;
         @NonNull
@@ -312,7 +333,7 @@ public class MainActivity extends AppCompatActivity {
             }
             bookViewHolder.cardView.setTag(b);
 
-            Glide.with(mContext).load(b.img_s).into(bookViewHolder.img);
+            GlideApp.with(mContext).load(b.img_s).into(bookViewHolder.img);
         }
 
         @Override
@@ -360,6 +381,7 @@ public class MainActivity extends AppCompatActivity {
                 .addAction(R.string.ReDown, new QMUIDialogAction.ActionListener() {
                     @Override
                     public void onClick(QMUIDialog dialog, int index) {
+                        dialog.dismiss();
                         startDownload();
                     }
                 })
@@ -372,85 +394,122 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
+    private ibook_config paraseConfigFile(File file){
+        String json = BookApplication.readFile(file);
+        ibook_config config = new Gson().fromJson(json, ibook_config.class);
+        return config;
+    }
+
     /**
      * 下载配制信息的回调函数
      */
-    Callback downConfigCallback = new Callback() {
+    CacheResult downConfigCallback = new CacheResult() {
         @Override
-        public void onFailure(Call call, IOException e) {
-            String url = call.request().url().toString();
-            downloadConfigSet.remove(url);
-            if(downloadConfigSet.size()==0 && Constants.domain.isEmpty()) {
+        public void tackFile(File file) {
+            if(file==null){
                 downloadConfigState = 2; //下载出错
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+                        fabaoButtonAlphaAnimation.cancel();
                         showReDonConfigDialog();
                     }
                 });
-            }
-        }
-
-        @Override
-        public void onResponse(Call call, Response response) throws IOException {
-            String json = response.body().string();
-            ibook_config config = new Gson().fromJson(json, ibook_config.class);
-            String url = call.request().url().toString();
-            downloadConfigSet.remove(url);
-            if(Constants.domain.isEmpty()) {
+            } else {
+                app.isHttpConnected = true;
+                ibook_config config = paraseConfigFile(file);
                 Constants.domain = config.domain;
                 Constants.download = config.download;
                 downloadConfigState = 3; //下载成功
-
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        //开始下载未下载完成的电子图书
-                        if(serialQueue==null) {
-                            serialQueue = new FileDownloadSerialQueue();
-                            File pdfDir = app.getFileDirFun("pdf");
-                            for(Book b : bookList){
-                                File file = new File(pdfDir, "book/"+b.fileName);
-                                if(!file.exists()){
-                                    b.downloaded=false;
-                                    bookPreferencesHelper.save(b);
-                                }
-                                if(!b.downloaded){
-                                    enqueueDownloadTask(b);
-                                }
-                            }
-                            serialQueue.resume();
+                        fabaoButtonAlphaAnimation.cancel();
+                        if(downloadConfigAfterStartFaoBaoActivity){
+                            startActivityForResult(new Intent(getThisActivity(), CategoryActivity.class), CategoryActivityREQUESTCODE);
                         } else {
-                            serialQueue.resume();
+                            //开始下载未下载完成的电子图书
+                            if (serialQueue == null) {
+                                serialQueue = new FileDownloadSerialQueue();
+                                File pdfDir = app.getFileDirFun("pdf");
+                                for (Book b : bookList) {
+                                    File file = new File(pdfDir, "book/" + b.fileName);
+                                    if (!file.exists()) {
+                                        b.downloaded = false;
+                                        bookPreferencesHelper.save(b);
+                                    }
+                                    if (!b.downloaded) {
+                                        enqueueDownloadTask(b);
+                                    }
+                                }
+                                serialQueue.resume();
+                            } else {
+                                serialQueue.resume();
+                            }
                         }
                     }
                 });
             }
-
         }
     };
 
     private void startDownload() {
         if(app.isNetworkConnected()) {
-            downloadConfigState = 1; //正在下载
-            OkHttpClient http = new OkHttpClient();
-            downloadConfigSet.clear();
-            downloadConfigSet.add(Constants.IBOOK_CONFIG_URL_TW);
-            downloadConfigSet.add(Constants.IBOOK_CONFIG_URL_CN);
-            http.newCall(new Request.Builder().url(Constants.IBOOK_CONFIG_URL_TW).build()).enqueue(downConfigCallback);
-            http.newCall(new Request.Builder().url(Constants.IBOOK_CONFIG_URL_CN).build()).enqueue(downConfigCallback);
+            /*
+            new PingTask(new PingCallBack() {
+                @Override
+                public void state(boolean state) {
+                    //真的有网络
+                    if(state){
+                        app.isHttpConnected = true;
+                        downloadConfigState = 1; //下载成功
+                        //真正的开始下载配制文件
+                        startDownloadConfig();
+                    } else {
+                        downloadConfigAfterStartFaoBaoActivity = false;
+                        app.isHttpConnected = false;
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                showNoNetworkDialog();
+                            }
+                        });
+                    }
+                }
+            }).execute("www.baidu.com");
+*/
+            downloadConfigState = 1; //下载成功
+            //真正的开始下载配制文件
+            startDownloadConfig();
         } else {
-            new QMUIDialog.MessageDialogBuilder(MainActivity.this)
-                    .setTitle(R.string.Prompt)
-                    .setMessage(R.string.NoNetworkConnected)
-                    .addAction(R.string.ok, new QMUIDialogAction.ActionListener() {
-                        @Override
-                        public void onClick(QMUIDialog dialog, int index) {
-                            dialog.dismiss();
-                        }
-                    })
-                    .show();
+            downloadConfigAfterStartFaoBaoActivity = false;
+            showNoNetworkDialog();
         }
+    }
+
+    private void startDownloadConfig(){
+        //在initTopBar之后，已初始化fabaoButton，让其动画闪烁
+        startFabBaoButtonAnimat();
+
+        String urls[] = {
+                Constants.IBOOK_CONFIG_URL_TW,
+                Constants.IBOOK_CONFIG_URL_CN
+        };
+
+        app.http.asyncTakeFastFile(urls, "setting.json", downConfigCallback);
+    }
+
+    private void showNoNetworkDialog(){
+        new QMUIDialog.MessageDialogBuilder(MainActivity.this)
+                .setTitle(R.string.Prompt)
+                .setMessage(R.string.NoNetworkConnected)
+                .addAction(R.string.ok, new QMUIDialogAction.ActionListener() {
+                    @Override
+                    public void onClick(QMUIDialog dialog, int index) {
+                        dialog.dismiss();
+                    }
+                })
+                .show();
     }
 
     private void stopDownload() {

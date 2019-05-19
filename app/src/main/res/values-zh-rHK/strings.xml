@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">華藏數位法寶</string>
     <string name="about_us_content" formatted="false">
-        華藏數位法寶APP，提供儒释道數位法寶電子書下載和閱讀，方便淨宗蓮友利用科技產品深入經藏。\n\n
+        華藏數位法寶APP，提供儒釋道數位法寶電子書下載和閱讀，方便淨宗蓮友利用科技產品深入經藏。\n\n
         https://www.hwadzan.tv/ \n\n
         社團法人中華華藏凈宗學會 \n 臺北市大安區信義路四段333-1號2樓 \n
         財團法人華藏凈宗弘化基金會 \n 臺北市大安區信義路四段341號5樓 \n
@@ -18,7 +18,7 @@
     <string name="complete">已完成</string>
     <string name="category_fail">獲取分類出錯</string>
     <string name="category_content_fail">獲取圖書列表出錯</string>
-    <string name="fabao">法寶</string>
+    <string name="fabao">目錄</string>
     <string name="about">關於</string>
     <string name="book_mark">書簽</string>
     <string name="night">夜間</string>

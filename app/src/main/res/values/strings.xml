@@ -17,7 +17,7 @@
     <string name="complete">已完成</string>
     <string name="category_fail">获取分类出错</string>
     <string name="category_content_fail">获取图书列表出错</string>
-    <string name="fabao">法宝</string>
+    <string name="fabao">目录</string>
     <string name="about">关于</string>
     <string name="book_mark">书签</string>
     <string name="night">夜间</string>

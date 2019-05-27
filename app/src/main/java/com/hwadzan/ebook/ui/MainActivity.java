@@ -1,7 +1,6 @@
 package com.hwadzan.ebook.ui;
 
 import android.app.Activity;
-import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -22,7 +21,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
 import com.google.gson.Gson;
 import com.hwadzan.ebook.BookApplication;
 import com.hwadzan.ebook.Constants;
@@ -31,8 +29,6 @@ import com.hwadzan.ebook.lib.BookMarkPreferencesHelper;
 import com.hwadzan.ebook.lib.BookPreferencesHelper;
 import com.hwadzan.ebook.lib.CacheResult;
 import com.hwadzan.ebook.lib.GlideApp;
-import com.hwadzan.ebook.lib.PingCallBack;
-import com.hwadzan.ebook.lib.PingTask;
 import com.hwadzan.ebook.model.Book;
 import com.hwadzan.ebook.model.ibook_config;
 import com.liulishuo.filedownloader.BaseDownloadTask;
@@ -45,19 +41,12 @@ import com.qmuiteam.qmui.widget.QMUITopBarLayout;
 import com.qmuiteam.qmui.widget.dialog.QMUIBottomSheet;
 import com.qmuiteam.qmui.widget.dialog.QMUIDialog;
 import com.qmuiteam.qmui.widget.dialog.QMUIDialogAction;
+
 import org.lzh.framework.updatepluginlib.UpdateBuilder;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.TreeSet;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity {
     private static boolean updateChecked = false;
@@ -177,7 +166,12 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
-    //接收返回值
+    /**
+     * 接收返回值
+     * @param requestCode
+     * @param resultCode
+     * @param data
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if(requestCode == CategoryActivityREQUESTCODE){
@@ -195,6 +189,7 @@ public class MainActivity extends AppCompatActivity {
                     bookList.add(0, b);
                     bookPreferencesHelper.save(b);
                     bookAdapter.notifyDataSetChanged();
+
                     //开始下载
                     enqueueDownloadTask(b);
                     serialQueue.resume();

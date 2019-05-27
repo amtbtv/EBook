@@ -77,7 +77,7 @@ public class BookApplication extends Application {
         try {
             read = new FileReader(file);
             br = new BufferedReader(read);
-            while ((content = br.readLine().trim()) != null) {
+            while ((content = br.readLine()) != null) {
                 result += content + "\r\n";
             }
         } catch (Exception e) {

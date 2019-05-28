@@ -8,6 +8,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.view.ViewCompat;
+import android.view.DragEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.widget.CompoundButton;
@@ -22,6 +24,7 @@ import com.app.hubert.guide.model.GuidePage;
 import com.github.barteksc.pdfviewer.PDFView;
 import com.github.barteksc.pdfviewer.listener.OnLoadCompleteListener;
 import com.github.barteksc.pdfviewer.listener.OnPageChangeListener;
+import com.github.barteksc.pdfviewer.listener.OnTapListener;
 import com.github.barteksc.pdfviewer.util.FitPolicy;
 import com.google.gson.Gson;
 import com.hwadzan.ebook.BookApplication;
@@ -37,12 +40,15 @@ import com.qmuiteam.qmui.util.QMUIDisplayHelper;
 import com.qmuiteam.qmui.util.QMUIStatusBarHelper;
 import com.qmuiteam.qmui.util.QMUIViewHelper;
 import com.qmuiteam.qmui.widget.QMUITopBarLayout;
+import com.shockwave.pdfium.util.SizeF;
 
 import java.io.File;
 
 public class PdfReaderActivity extends Activity {
 
     Book book;
+
+    SizeF pageSize;
 
     int screenWidth;
     int screenWidth3;
@@ -250,12 +256,12 @@ pdfView.fromAsset(String)
         File cacheDir = app.getFileDirFun("pdf");
         File file = new File(cacheDir, "book/"+book.fileName);
         pdfView.fromFile(file)
-                .enableDoubletap(false) //双击不放大
+                .enableDoubletap(true) //双击不放大
                 .enableSwipe(true) // 允许手指滑动操作换页进度
                 .swipeHorizontal(!setting.isVerticalPage) //水平翻页
-                .spacing(1) // 自动页间距
-                //.autoSpacing(true)
-                .pageFitPolicy(FitPolicy.BOTH) //页面适应屏幕大小
+                //.spacing(1) // 自动页间距
+                .autoSpacing(true)
+                .pageFitPolicy(FitPolicy.WIDTH) //页面适应屏幕大小
                 .pageSnap(true) // snap pages to screen boundaries
                 .pageFling(true) // make a fling change only a single page like ViewPager
                 .defaultPage(bookMark.page) // 初始化第一页
@@ -276,7 +282,6 @@ pdfView.fromAsset(String)
                     }
                 })
                 .load();
-
 
         if(setting.isVerticalPage){
             NewbieGuide.with(PdfReaderActivity.this)
@@ -299,10 +304,30 @@ pdfView.fromAsset(String)
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                if(!isSeekBarTracking)
+                if(!isSeekBarTracking) {
+                    int curPage = pdfView.getCurrentPage();
+                    SizeF curPageSize = pdfView.getPageSize(curPage);
+                    if(sizeChage(curPageSize, pageSize)){
+                        pageSize = curPageSize;
+                        pdfView.fitToWidth(curPage);
+                    }
                     pdfView.performPageSnap();
+                }
             }
-        }, 200);
+        }, 300);
+    }
+
+    boolean sizeChage(SizeF s1, SizeF s2){
+        if(s1==null || s2==null)
+            return true;
+
+        if(Math.abs((s1.getWidth() - s2.getWidth()) / s1.getWidth())>0.05)
+            return true;
+
+        if(Math.abs((s1.getHeight() - s2.getHeight()) / s1.getHeight())>0.05)
+            return true;
+
+        return false;
     }
 
     private void setPdfViewBackColor(boolean isNight){

@@ -418,33 +418,47 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 app.isHttpConnected = true;
                 ibook_config config = paraseConfigFile(file);
-                Constants.domain = config.domain;
-                Constants.download = config.download;
-                app.downloadConfigState = 3; //下载成功
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        fabaoButtonAlphaAnimation.cancel();
-                        if(downloadConfigAfterStartFaoBaoActivity){
-                            startActivityForResult(new Intent(getThisActivity(), CategoryActivity.class), CategoryActivityREQUESTCODE);
-                        } else {
-                            //开始下载未下载完成的电子图书
-                            File pdfDir = app.getFileDirFun("pdf");
-                            for (Book b : bookList) {
-                                File file = new File(pdfDir, "book/" + b.fileName);
 
-                                // 这里是为了防止清空缓存之类的操作，把电子书都删除了。默认情况下已下载电子的downloaded=true
-                                if (!file.exists()) {
-                                    b.downloaded = false;
-                                    bookPreferencesHelper.save(b);
-                                }
-                            }
+                if(config==null || config.domain==null){
 
-                            //后台添加下载任务
-                            new AddDownloadTask().doInBackground(bookList);
+                    app.downloadConfigState = 2; //下载出错
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            fabaoButtonAlphaAnimation.cancel();
+                            showReDonConfigDialog();
                         }
-                    }
-                });
+                    });
+
+                } else {
+                    Constants.domain = config.domain;
+                    Constants.download = config.download;
+                    app.downloadConfigState = 3; //下载成功
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            fabaoButtonAlphaAnimation.cancel();
+                            if (downloadConfigAfterStartFaoBaoActivity) {
+                                startActivityForResult(new Intent(getThisActivity(), CategoryActivity.class), CategoryActivityREQUESTCODE);
+                            } else {
+                                //开始下载未下载完成的电子图书
+                                File pdfDir = app.getFileDirFun("pdf");
+                                for (Book b : bookList) {
+                                    File file = new File(pdfDir, "book/" + b.fileName);
+
+                                    // 这里是为了防止清空缓存之类的操作，把电子书都删除了。默认情况下已下载电子的downloaded=true
+                                    if (!file.exists()) {
+                                        b.downloaded = false;
+                                        bookPreferencesHelper.save(b);
+                                    }
+                                }
+
+                                //后台添加下载任务
+                                new AddDownloadTask().doInBackground(bookList);
+                            }
+                        }
+                    });
+                }
             }
         }
     };

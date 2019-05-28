@@ -3,7 +3,9 @@ package com.hwadzan.ebook.ui;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
@@ -31,10 +33,11 @@ import com.hwadzan.ebook.lib.CacheResult;
 import com.hwadzan.ebook.lib.GlideApp;
 import com.hwadzan.ebook.model.Book;
 import com.hwadzan.ebook.model.ibook_config;
-import com.liulishuo.filedownloader.BaseDownloadTask;
-import com.liulishuo.filedownloader.FileDownloadListener;
-import com.liulishuo.filedownloader.FileDownloader;
-import com.liulishuo.filedownloader.util.FileDownloadSerialQueue;
+import com.liulishuo.okdownload.DownloadListener;
+import com.liulishuo.okdownload.DownloadSerialQueue;
+import com.liulishuo.okdownload.DownloadTask;
+import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
+import com.liulishuo.okdownload.core.listener.DownloadListener3;
 import com.qmuiteam.qmui.util.QMUIDisplayHelper;
 import com.qmuiteam.qmui.util.QMUIStatusBarHelper;
 import com.qmuiteam.qmui.widget.QMUITopBarLayout;
@@ -45,6 +48,7 @@ import com.qmuiteam.qmui.widget.dialog.QMUIDialogAction;
 import org.lzh.framework.updatepluginlib.UpdateBuilder;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -62,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
     BookAdapter bookAdapter;
 
     File parentFile;
-    FileDownloadSerialQueue serialQueue;
+    DownloadSerialQueue serialQueue;
 
     int imageWidth;
     int imageHeight;
@@ -190,13 +194,16 @@ public class MainActivity extends AppCompatActivity {
                     bookPreferencesHelper.save(b);
                     bookAdapter.notifyDataSetChanged();
 
-                    //开始下载
-                    enqueueDownloadTask(b);
-                    serialQueue.resume();
+                    List<Book> bookListNew = new ArrayList<>();
+                    bookListNew.add(b);
+                    //后台添加下载任务
+                    new AddDownloadTask().doInBackground(bookListNew);
                 }
             }
         }
     }
+
+
 
     Activity getThisActivity(){
         return this;
@@ -364,16 +371,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void enqueueDownloadTask(Book b){
-        File file = new File(parentFile, b.fileName);
-        BaseDownloadTask task = FileDownloader.getImpl().create(b.url);
-        task.setPath(file.getAbsolutePath());
-        task.setTag(b);
-        task.setAutoRetryTimes(3);
-        task.setListener(downloadListener);
-        serialQueue.enqueue(task);
-    }
-
     /**
      * 下载配制信息出错，显示对话框，重新下载
      */
@@ -432,29 +429,63 @@ public class MainActivity extends AppCompatActivity {
                             startActivityForResult(new Intent(getThisActivity(), CategoryActivity.class), CategoryActivityREQUESTCODE);
                         } else {
                             //开始下载未下载完成的电子图书
-                            if (serialQueue == null) {
-                                serialQueue = new FileDownloadSerialQueue();
-                                File pdfDir = app.getFileDirFun("pdf");
-                                for (Book b : bookList) {
-                                    File file = new File(pdfDir, "book/" + b.fileName);
-                                    if (!file.exists()) {
-                                        b.downloaded = false;
-                                        bookPreferencesHelper.save(b);
-                                    }
-                                    if (!b.downloaded) {
-                                        enqueueDownloadTask(b);
-                                    }
+                            File pdfDir = app.getFileDirFun("pdf");
+                            for (Book b : bookList) {
+                                File file = new File(pdfDir, "book/" + b.fileName);
+
+                                // 这里是为了防止清空缓存之类的操作，把电子书都删除了。默认情况下已下载电子的downloaded=true
+                                if (!file.exists()) {
+                                    b.downloaded = false;
+                                    bookPreferencesHelper.save(b);
                                 }
-                                serialQueue.resume();
-                            } else {
-                                serialQueue.resume();
                             }
+
+                            //后台添加下载任务
+                            new AddDownloadTask().doInBackground(bookList);
                         }
                     }
                 });
             }
         }
     };
+
+    /**
+     * 异步后台添加下载任务
+     */
+    class AddDownloadTask extends AsyncTask<List<Book>, Integer, Integer>{
+        @Override
+        protected Integer doInBackground(List<Book>... lists) {
+            if (serialQueue == null) {
+                serialQueue = new DownloadSerialQueue(downloadListener);
+            }
+
+            if(lists!=null && lists.length>0) {
+                List<Book> bookList = lists[0];
+                for (Book b : bookList) {
+                    if (!b.downloaded) {
+
+                        try {
+                            Thread.sleep(100);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+
+                        DownloadTask task = new DownloadTask.Builder(b.url, parentFile)
+                                .setFilename(b.fileName)
+                                .setMinIntervalMillisCallbackProcess(30)
+                                .setPassIfAlreadyCompleted(false)
+                                .build();
+                        task.setTag(b);
+
+                        serialQueue.enqueue(task);
+                    }
+                }
+
+                serialQueue.resume();
+            }
+            return null;
+        }
+    }
 
     private void startDownload() {
         if(app.isNetworkConnected()) {
@@ -522,8 +553,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    FileDownloadListener downloadListener = new FileDownloadListener() {
-        /*
+        /**
 pending 	等待，已经进入下载队列 	数据库中的soFarBytes与totalBytes
 started 	结束了pending，并且开始当前任务的Runnable 	-
 connected 	已经连接上 	ETag, 是否断点续传, soFarBytes, totalBytes
@@ -535,51 +565,56 @@ paused 	暂停下载 	soFarBytes
 error 	下载出现错误 	抛出的Throwable
 warn 	在下载队列中(正在等待/正在下载)已经存在相同下载连接与相同存储路径的任务 	-
 */
-        @Override
-        protected void pending(BaseDownloadTask task, int soFarBytes, int totalBytes) {
-            Book b = (Book) task.getTag();
-            b.downloaProcess = getString(R.string.waiting);
-            bookAdapter.notifyDataSetChanged();
-        }
+    DownloadListener downloadListener = new DownloadListener3() {
+            @Override protected void started(@NonNull DownloadTask task) {
+                Book b = (Book) task.getTag();
+                b.downloaProcess = getString(R.string.waiting);
+                bookAdapter.notifyDataSetChanged();
+            }
 
-        @Override
-        protected void progress(BaseDownloadTask task, int soFarBytes, int totalBytes) {
-            Book b = (Book) task.getTag();
-            long d = soFarBytes;
-            long t = totalBytes;
-            b.downloaProcess = String.valueOf(d*100/t) + "%";
-            bookAdapter.notifyDataSetChanged();
-        }
+            @Override
+            public void retry(@NonNull DownloadTask task, @NonNull ResumeFailedCause cause) {
+                Log.i("DownloadListener", "retry");
+            }
 
-        @Override
-        protected void completed(BaseDownloadTask task) {
-            Book b = (Book) task.getTag();
-            b.downloaded = true;
-            b.downloaProcess = getThisActivity().getString(R.string.downoad_over);
-            bookPreferencesHelper.save(b);
-            bookAdapter.notifyDataSetChanged();
-        }
+            @Override
+            public void connected(@NonNull DownloadTask task, int blockCount, long currentOffset,
+                                  long totalLength) {
+                Log.i("DownloadListener", "connected");
+            }
 
-        @Override
-        protected void paused(BaseDownloadTask task, int soFarBytes, int totalBytes) {
-            Book b = (Book) task.getTag();
-            b.downloaProcess = getString(R.string.paused);
-            bookAdapter.notifyDataSetChanged();
-        }
+            @Override
+            public void progress(@NonNull DownloadTask task, long currentOffset, long totalLength) {
+                Book b = (Book) task.getTag();
+                b.downloaProcess = String.valueOf(currentOffset*100/totalLength) + "%";
+                bookAdapter.notifyDataSetChanged();
+            }
 
-        @Override
-        protected void error(BaseDownloadTask task, Throwable e) {
-            Book b = (Book) task.getTag();
-            b.downloaProcess = getThisActivity().getString(R.string.downoad_error);;
-            bookPreferencesHelper.save(b);
-            bookAdapter.notifyDataSetChanged();
-        }
+            @Override protected void completed(@NonNull DownloadTask task) {
+                Book b = (Book) task.getTag();
+                b.downloaded = true;
+                b.downloaProcess = getThisActivity().getString(R.string.downoad_over);
+                bookPreferencesHelper.save(b);
+                bookAdapter.notifyDataSetChanged();
+            }
 
-        @Override
-        protected void warn(BaseDownloadTask task) {
-            Book b = (Book) task.getTag();
-            b.downloaProcess = "Warm";
-            bookAdapter.notifyDataSetChanged();
-        }
+            @Override protected void canceled(@NonNull DownloadTask task) {
+                Book b = (Book) task.getTag();
+                b.downloaProcess = getString(R.string.paused);
+                bookAdapter.notifyDataSetChanged();
+            }
+
+            @Override protected void error(@NonNull DownloadTask task, @NonNull Exception e) {
+                Book b = (Book) task.getTag();
+                b.downloaProcess = getThisActivity().getString(R.string.downoad_error);;
+                bookPreferencesHelper.save(b);
+                bookAdapter.notifyDataSetChanged();
+            }
+
+            @Override protected void warn(@NonNull DownloadTask task) {
+                Book b = (Book) task.getTag();
+                b.downloaProcess = "Warm";
+                bookAdapter.notifyDataSetChanged();
+            }
     };
 }

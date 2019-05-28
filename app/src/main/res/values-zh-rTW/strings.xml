@@ -8,7 +8,7 @@
         財團法人華藏凈宗弘化基金會 \n 臺北市大安區信義路四段341號5樓 \n
         TEL:+886-2-27547178　FAX:+886-2-27547262 \n
         E-MAIL:amtb@hwadzan.com
-      </string>
+    </string>
     <string name="search_hint">搜索</string>
     <string name="open_failed">打開文件出錯</string>
     <string name="add_mark_success">添加成功</string>
@@ -26,7 +26,7 @@
     <string name="from_download">從%s下載%s</string>
     <string name="downoad_over">完成</string>
     <string name="downoad_error">下載出錯</string>
-    <string name="NoBookMessage">請點擊法寶選擇圖書</string>
+    <string name="NoBookMessage">請點擊目錄選擇圖書</string>
     <string name="ok">確定</string>
     <string name="Prompt">提示</string>
     <string name="UnsupportedBook">本類圖書暫不支持</string>
@@ -36,14 +36,14 @@
     <string name="downloadingConfig">正在獲取信息，請稍等</string>
     <string name="noDownloadConfig">還未獲取信息，請稍等</string>
     <string name="switchVerticalPage">翻頁方式改變，請重新打開電子書</string>
-    <string name="guild_main_activity">點擊法寶添加圖書</string>
+    <string name="guild_main_activity">點擊目錄添加圖書</string>
     <string name="pre_page">上壹頁</string>
     <string name="next_page">下壹頁</string>
     <string name="show_menu">菜單</string>
     <string name="category_content_network_fail">獲取圖書列表時網絡出錯</string>
     <string name="category_network_fail">獲取分類時網絡出錯，是否重新下載？</string>
-    <string name="NoNetworkConnected">未連接網站，僅能觀看已下載法寶</string>
-    <string name="DownConfigFail">下载服务器信息出错，僅能觀看已下載法寶。是否重新下載？</string>
+    <string name="NoNetworkConnected">未連接網站，僅能觀看已下載圖書</string>
+    <string name="DownConfigFail">下载服务器信息出错，僅能觀看已下載圖書。是否重新下載？</string>
     <string name="ReDown">重新下載</string>
     <string name="Cancle">取消</string>
 </resources>

@@ -10,7 +10,7 @@ import android.view.WindowManager;
 
 import com.google.gson.Gson;
 import com.hwadzan.ebook.lib.CacheOKHttp;
-import com.liulishuo.filedownloader.FileDownloader;
+//import com.liulishuo.okdownload.OkDownload;
 
 import org.lzh.framework.updatepluginlib.UpdateConfig;
 import org.lzh.framework.updatepluginlib.base.UpdateParser;
@@ -40,7 +40,8 @@ public class BookApplication extends Application {
 
         http = new CacheOKHttp(this, "json");
 
-        FileDownloader.setup(this);
+        //FileDownloader.setup(this);
+
         //bygly 1979710467
         //ks45i89f
         //app key : 857b9eee-3a37-48c7-aca1-1dc40f3ac47b

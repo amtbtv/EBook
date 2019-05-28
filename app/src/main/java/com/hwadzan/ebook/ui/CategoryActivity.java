@@ -154,75 +154,50 @@ public class CategoryActivity extends AppCompatActivity {
             mask_layout.setVisibility(View.GONE);
     }
 
-    /*
+    /**
+     * 显示对话框让用户确认下载
+     * @param b
+     */
     private void showSimpleBottomSheetList(final Book b) {
-        // 从华藏下载PDF格式电子
-        QMUIBottomSheet.BottomListSheetBuilder builder = new QMUIBottomSheet.BottomListSheetBuilder(getThisActivity());
-        for (Host host : app.hostList) {
-            if ((host.fabo_host_type.equals("PDF") && b.pdf))// || (host.fabo_host_type.equals("TXT") && b.txt) || (host.fabo_host_type.equals("EPUB") && b.epub))
-            {
-                builder.addItem(String.format(getString(R.string.from_download), host.fabo_host_name, host.fabo_host_type), host.fabo_host_server+";"+host.fabo_host_type);
-            }
+        if(b.pdf) {
+            new QMUIDialog.MessageDialogBuilder(CategoryActivity.this)
+                    .setTitle(R.string.Prompt)
+                    .setMessage(R.string.ConfirmDownload)
+                    .addAction(R.string.ok, new QMUIDialogAction.ActionListener() {
+                        @Override
+                        public void onClick(QMUIDialog dialog, int index) {
+                            dialog.dismiss();
+                            b.url = Constants.Make_DOWNLOAD_BOOK_URL("pdf", b.fabo_serial);
+                            b.fileName = b.fabo_serial + ".pdf";
+                            b.lastReadTime = new Date().getTime();
+                            //数据是使用Intent返回
+                            Intent intent = new Intent();
+                            //把返回数据存入Intent
+                            intent.putExtra("book", new Gson().toJson(b));
+                            //设置返回数据
+                            setResult(RESULT_OK, intent);
+                            finish();
+                        }
+                    })
+                    .addAction(R.string.Cancle, new QMUIDialogAction.ActionListener() {
+                        @Override
+                        public void onClick(QMUIDialog dialog, int index) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .show();
+        } else {
+            new QMUIDialog.MessageDialogBuilder(CategoryActivity.this)
+                    .setTitle(R.string.Prompt)
+                    .setMessage(R.string.UnsupportedBook)
+                    .addAction(R.string.ok, new QMUIDialogAction.ActionListener() {
+                        @Override
+                        public void onClick(QMUIDialog dialog, int index) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .show();
         }
-        builder.setOnSheetItemClickListener(new QMUIBottomSheet.BottomListSheetBuilder.OnSheetItemClickListener() {
-            @Override
-            public void onClick(QMUIBottomSheet dialog, View itemView, int position, String tag) {
-                dialog.dismiss();
-                String[] ss = tag.toLowerCase().split(";");
-                b.url = Constants.Make_DOWNLOAD_BOOK_URL(ss[0], b.path, ss[1], b.fabo_serial);
-                b.fileName = b.fabo_serial + "." + ss[1];
-                b.lastReadTime = new Date().getTime();
-
-                //数据是使用Intent返回
-                Intent intent = new Intent();
-                //把返回数据存入Intent
-                intent.putExtra("book", new Gson().toJson(b));
-                //设置返回数据
-                setResult(RESULT_OK, intent);
-
-                finish();
-            }
-        })
-                .build()
-                .show();
-    }
-    */
-
-    private void showSimpleBottomSheetList(final Book b) {
-        // 从华藏下载PDF格式电子
-        QMUIBottomSheet.BottomListSheetBuilder builder = new QMUIBottomSheet.BottomListSheetBuilder(getThisActivity());
-        builder.addItem(getString(R.string.ConfirmDownload));
-        builder.setOnSheetItemClickListener(new QMUIBottomSheet.BottomListSheetBuilder.OnSheetItemClickListener() {
-            @Override
-            public void onClick(QMUIBottomSheet dialog, View itemView, int position, String tag) {
-                dialog.dismiss();
-                if (b.pdf) {
-                    b.url = Constants.Make_DOWNLOAD_BOOK_URL("pdf", b.fabo_serial);
-                    b.fileName = b.fabo_serial + ".pdf";
-                    b.lastReadTime = new Date().getTime();
-                    //数据是使用Intent返回
-                    Intent intent = new Intent();
-                    //把返回数据存入Intent
-                    intent.putExtra("book", new Gson().toJson(b));
-                    //设置返回数据
-                    setResult(RESULT_OK, intent);
-                    finish();
-                } else {
-                    new QMUIDialog.MessageDialogBuilder(CategoryActivity.this)
-                            .setTitle(R.string.Prompt)
-                            .setMessage(R.string.UnsupportedBook)
-                            .addAction(R.string.ok, new QMUIDialogAction.ActionListener() {
-                                @Override
-                                public void onClick(QMUIDialog dialog, int index) {
-                                    dialog.dismiss();
-                                }
-                            })
-                            .show();
-                }
-            }
-        })
-                .build()
-                .show();
     }
 
     private void downCategoryContentList(Category c){

@@ -45,4 +45,5 @@
     <string name="DownConfigFail">下载服务器信息出错，仅能观看已下载图书。是否重新下载？</string>
     <string name="ReDown">重新下载</string>
     <string name="Cancle">取消</string>
+    <string name="search_text_too_short">搜索词至少2个字</string>
 </resources>

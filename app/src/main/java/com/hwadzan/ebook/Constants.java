@@ -32,4 +32,8 @@ public class Constants {
         //return "https://" + server + path + type + "/" + fabo_serial + "." + type;
         return "http://vod.amtb.de/redirect/fabo/" + type + "/" + fabo_serial + "." + type;
     }
+
+    public static String Make_Search_URL(String query) {
+        return "https://amtbapi.amtb.de/ibook_search/" + query;
+    }
 }

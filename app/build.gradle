@@ -6,8 +6,8 @@ android {
         applicationId "com.hwadzan.fabao"
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 10701
-        versionName '1.7.1'
+        versionCode 10703
+        versionName '1.7.3'
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         ndk {
             //设置支持的SO库架构
@@ -40,9 +40,9 @@ dependencies {
     implementation 'com.qmuiteam:qmui:1.2.0'
     implementation 'com.squareup.okhttp3:okhttp:3.12.1'
     implementation 'com.google.code.gson:gson:2.8.5'
-    implementation 'com.liulishuo.okdownload:okdownload:1.0.5'
-    implementation 'com.liulishuo.okdownload:sqlite:1.0.5'
-    implementation 'com.liulishuo.okdownload:okhttp:1.0.5'
+    implementation 'com.liulishuo.okdownload:okdownload:1.0.6'
+    implementation 'com.liulishuo.okdownload:sqlite:1.0.6'
+    implementation 'com.liulishuo.okdownload:okhttp:1.0.6'
     implementation 'com.github.barteksc:android-pdf-viewer:3.1.0-beta.1'
     implementation 'com.github.bumptech.glide:glide:4.8.0'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.8.0'

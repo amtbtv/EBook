@@ -16,6 +16,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -52,7 +53,7 @@ import okhttp3.Response;
 public class CategoryActivity extends AppCompatActivity {
 
     ListView category_lv;
-    EditText search;
+    SearchView search;
     ListView content_lv;
 
     FrameLayout mask_layout;
@@ -89,15 +90,34 @@ public class CategoryActivity extends AppCompatActivity {
         mask_layout = (FrameLayout) findViewById(R.id.mask_layout);
 
         category_lv = (ListView) findViewById(R.id.category_lv);
-        search = (EditText) findViewById(R.id.search);
-        search.addTextChangedListener(new TextWatcher() {
+        search = findViewById(R.id.search);
+        // 设置搜索文本监听
+        search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            //当点击搜索按钮时触发该方法
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            public boolean onQueryTextSubmit(String query) {
+                String q = query.trim();
+                if(q.length()>=2){
+                    //开始搜索
 
+                    // 设置取消类别选择搜索
+                    categoryAdatper.selectedAid = -1;
+                    categoryAdatper.notifyDataSetChanged();
+
+                    showMaskProcessBar(true);
+
+                    search(q);
+                } else {
+                    Toast.makeText(getThisActivity(), R.string.search_text_too_short, Toast.LENGTH_LONG).show();
+                }
+
+
+                return false;
             }
 
+            //当搜索内容改变时触发该方法
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            public boolean onQueryTextChange(String s) {
                 if(s != null && s.length()>0){
                     String str = s.toString();
                     if(tw2CN.getIsZH())
@@ -114,10 +134,7 @@ public class CategoryActivity extends AppCompatActivity {
                     bookListFilter.clear();
                     bookListFilter.addAll(bookList);
                 }
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
+                return false;
             }
         });
 
@@ -199,6 +216,32 @@ public class CategoryActivity extends AppCompatActivity {
                     .show();
         }
     }
+
+    private void search(String query){
+        mTopBar.setTitle(query);
+        String tquery = tw2CN.s2t(query);
+        String fileName = tquery + ".json";
+        File tmpFile = app.http.asyncTakeFile(Constants.Make_Search_URL(tquery), fileName, new CacheResult() {
+            @Override
+            public void tackFile(File file) {
+                if(file==null){
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(getThisActivity(), R.string.category_content_network_fail, Toast.LENGTH_LONG).show();
+                        }
+                    });
+                } else {
+                    resetBookList(file);
+                }
+            }
+        });
+
+        if(tmpFile!=null){
+            resetBookList(tmpFile);
+        }
+    }
+
 
     private void downCategoryContentList(Category c){
         mTopBar.setTitle(c.name);

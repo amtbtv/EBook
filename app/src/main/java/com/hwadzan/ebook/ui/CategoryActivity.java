@@ -2,16 +2,13 @@ package com.hwadzan.ebook.ui;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
-import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -20,7 +17,6 @@ import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.hwadzan.ebook.BookApplication;
@@ -31,24 +27,15 @@ import com.hwadzan.ebook.lib.GlideApp;
 import com.hwadzan.ebook.lib.TW2CN;
 import com.hwadzan.ebook.model.Book;
 import com.hwadzan.ebook.model.Category;
-import com.hwadzan.ebook.model.Host;
 import com.qmuiteam.qmui.util.QMUIStatusBarHelper;
 import com.qmuiteam.qmui.widget.QMUITopBarLayout;
-import com.qmuiteam.qmui.widget.dialog.QMUIBottomSheet;
 import com.qmuiteam.qmui.widget.dialog.QMUIDialog;
 import com.qmuiteam.qmui.widget.dialog.QMUIDialogAction;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 
 public class CategoryActivity extends AppCompatActivity {
 
@@ -223,7 +210,7 @@ public class CategoryActivity extends AppCompatActivity {
         String fileName = tquery + ".json";
         File tmpFile = app.http.asyncTakeFile(Constants.Make_Search_URL(tquery), fileName, new CacheResult() {
             @Override
-            public void tackFile(File file) {
+            public void takeFile(File file) {
                 if(file==null){
                     runOnUiThread(new Runnable() {
                         @Override
@@ -248,7 +235,7 @@ public class CategoryActivity extends AppCompatActivity {
         String fileName = String.valueOf(c.aid) + ".json";
         File tmpFile = app.http.asyncTakeFile(Constants.Make_BOOKS_URL(c.aid), fileName, new CacheResult() {
             @Override
-            public void tackFile(File file) {
+            public void takeFile(File file) {
                 if(file==null){
                     runOnUiThread(new Runnable() {
                         @Override
@@ -316,7 +303,7 @@ public class CategoryActivity extends AppCompatActivity {
         String fileName = "CATEGORY.json";
         File tmpFile = app.http.asyncTakeFile(Constants.CATEGORY_URL(), fileName, new CacheResult() {
             @Override
-            public void tackFile(File file) {
+            public void takeFile(File file) {
                 if(file==null){
                     runOnUiThread(new Runnable() {
                         @Override

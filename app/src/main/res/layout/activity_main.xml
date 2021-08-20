@@ -6,19 +6,19 @@ android:layout_width="match_parent"
 android:layout_height="match_parent"
 tools:context=".ui.MainActivity">
 
-    <android.support.constraint.ConstraintLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="?attr/qmui_topbar_height"
         android:background="?attr/qmui_config_color_background"
         android:fitsSystemWindows="true">
 
-        <android.support.v7.widget.RecyclerView
+        <androidx.recyclerview.widget.RecyclerView
             android:padding="4dp"
             android:id="@+id/recyclerView"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
-    </android.support.constraint.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <com.qmuiteam.qmui.widget.QMUITopBarLayout
         android:id="@+id/topbar"

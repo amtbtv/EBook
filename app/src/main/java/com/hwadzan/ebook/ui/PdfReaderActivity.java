@@ -3,13 +3,11 @@ package com.hwadzan.ebook.ui;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.PointF;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v4.view.ViewCompat;
-import android.view.DragEvent;
-import android.view.MotionEvent;
+import androidx.core.view.ViewCompat;
+
 import android.view.View;
 import android.view.Window;
 import android.widget.CompoundButton;
@@ -24,7 +22,6 @@ import com.app.hubert.guide.model.GuidePage;
 import com.github.barteksc.pdfviewer.PDFView;
 import com.github.barteksc.pdfviewer.listener.OnLoadCompleteListener;
 import com.github.barteksc.pdfviewer.listener.OnPageChangeListener;
-import com.github.barteksc.pdfviewer.listener.OnTapListener;
 import com.github.barteksc.pdfviewer.util.FitPolicy;
 import com.google.gson.Gson;
 import com.hwadzan.ebook.BookApplication;
@@ -253,8 +250,8 @@ pdfView.fromAsset(String)
     .pageFling(false) // 单页模式，就象ViewPager
     .nightMode(false) // 夜间模式
     .load();*/
-        File cacheDir = app.getFileDirFun("pdf");
-        File file = new File(cacheDir, "book/"+book.fileName);
+        File parentFile = new File(app.getFileDirFun("pdf"), "book");
+        File file = new File(parentFile, book.fileName);
         pdfView.fromFile(file)
                 .enableDoubletap(true) //双击不放大
                 .enableSwipe(true) // 允许手指滑动操作换页进度

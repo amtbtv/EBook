@@ -2,6 +2,7 @@ package com.hwadzan.ebook;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Environment;
@@ -12,9 +13,9 @@ import com.google.gson.Gson;
 import com.hwadzan.ebook.lib.CacheOKHttp;
 //import com.liulishuo.okdownload.OkDownload;
 
-import org.lzh.framework.updatepluginlib.UpdateConfig;
-import org.lzh.framework.updatepluginlib.base.UpdateParser;
-import org.lzh.framework.updatepluginlib.model.Update;
+//import org.lzh.framework.updatepluginlib.UpdateConfig;
+//import org.lzh.framework.updatepluginlib.base.UpdateParser;
+//import org.lzh.framework.updatepluginlib.model.Update;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -26,19 +27,17 @@ import java.io.Reader;
 
 public class BookApplication extends Application {
 
-    public boolean isHttpConnected = false;
     public CacheOKHttp http;
-
-    /**
-     * 0 未下载默认， 1 正在下载, 2 下载出错,  3 下载成功
-     */
-    public int downloadConfigState = 0;
 
     @Override
     public void onCreate() {
         super.onCreate();
 
         http = new CacheOKHttp(this, "json");
+
+        //启动service
+        Intent startIntent = new Intent(this, DownloadService.class);
+        startService(startIntent);
 
         //FileDownloader.setup(this);
 
@@ -47,6 +46,7 @@ public class BookApplication extends Application {
         //app key : 857b9eee-3a37-48c7-aca1-1dc40f3ac47b
         //Bugly.init(getApplicationContext(), "f456fb17ee", true);
 
+        /*
         UpdateConfig.getConfig()
                 .setUrl(Constants.Upgrade_Url)// 配置检查更新的API接口
                 .setUpdateParser(new UpdateParser() {
@@ -56,6 +56,8 @@ public class BookApplication extends Application {
                         return update;
                     }
                 });
+
+         */
     }
 
     public File getFileDirFun(String type) {

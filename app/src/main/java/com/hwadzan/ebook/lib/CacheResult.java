@@ -1,7 +1,5 @@
 package com.hwadzan.ebook.lib;
 
-import android.graphics.Bitmap;
-
 import java.io.File;
 
 /**
@@ -9,5 +7,5 @@ import java.io.File;
  */
 
 public interface CacheResult {
-    void tackFile(File file);
+    void takeFile(File file);
 }

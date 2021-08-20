@@ -6,7 +6,7 @@ android:layout_width="match_parent"
 android:layout_height="match_parent"
 tools:context=".ui.AboutUsActivity">
 
-<android.support.constraint.ConstraintLayout
+<androidx.constraintlayout.widget.ConstraintLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_marginTop="?attr/qmui_topbar_height"
@@ -40,7 +40,7 @@ tools:context=".ui.AboutUsActivity">
         android:focusable="true"
         android:clickable="true"/>
 
-</android.support.constraint.ConstraintLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
 
 <com.qmuiteam.qmui.widget.QMUITopBarLayout
     android:id="@+id/topbar"

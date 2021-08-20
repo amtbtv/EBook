@@ -1,14 +1,12 @@
 package com.hwadzan.ebook.lib;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Environment;
-
-import com.hwadzan.ebook.Constants;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,8 +14,6 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
@@ -28,12 +24,9 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-import okhttp3.Cache;
-import okhttp3.CacheControl;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Headers;
-import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -61,6 +54,7 @@ public class CacheOKHttp {
             .add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36")
             .add("Accept-Language", "en-US,en;q=0.8")
             .build();
+
 
     public CacheOKHttp(Context context, String dir){
 
@@ -186,16 +180,10 @@ public class CacheOKHttp {
         }
     }
 
-    public void asyncTakeFastFile(String[] urls, String fileName, final CacheResult fileCacheResult) {
-        final File cacheFile = new File(cacheDir, fileName);
-        if (cacheFile.exists())
-            cacheFile.delete();
-        final Boolean[] isDownloaded = {false};
-        final TreeSet<String> downloadConfigSet = new TreeSet<>();
+    public void asyncTakeFastStringResult(String[] urls, final StringResult stringResult) {
 
+        FastSiteSynchronized fastSiteSynchronized = new FastSiteSynchronized(urls);
         for (String url : urls) {
-            downloadConfigSet.add(url);
-
             Request request = new Request.Builder()
                     .headers(headers)
                     .url(url)
@@ -204,26 +192,18 @@ public class CacheOKHttp {
                 @Override
                 public void onFailure(Call call, IOException e) {
                     String url = call.request().url().toString();
-                    downloadConfigSet.remove(url);
-                    if (downloadConfigSet.size() == 0 && !isDownloaded[0]) {
-                        fileCacheResult.tackFile(null);
+                    FastSiteSynchronized.State state = fastSiteSynchronized.putFail(url);
+                    if(state == FastSiteSynchronized.State.AllFail) {
+                        stringResult.takeStringResult(null);
                     }
                 }
 
                 @Override
                 public void onResponse(Call call, Response response) throws IOException {
-                    File file = saveFile(cacheFile, response);
-                    //已下载，不做处理
-                    if (isDownloaded[0]) return;
-
                     String url = call.request().url().toString();
-                    if (file == null) {
-                        isDownloaded[0] = false;
-                        downloadConfigSet.remove(url);
-                    } else {
-                        isDownloaded[0] = true;
-                        downloadConfigSet.remove(url);
-                        fileCacheResult.tackFile(file);
+                    String str = response.body().string();
+                    if(fastSiteSynchronized.putSucess(url, str)){
+                        stringResult.takeStringResult(str);
                     }
                 }
             });
@@ -244,12 +224,12 @@ public class CacheOKHttp {
             client.newCall(request).enqueue(new Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {
-                    fileCacheResult.tackFile(null);
+                    fileCacheResult.takeFile(null);
                 }
 
                 @Override
                 public void onResponse(Call call, Response response) throws IOException {
-                    fileCacheResult.tackFile(saveFile(cacheFile, response));
+                    fileCacheResult.takeFile(saveFile(cacheFile, response));
                 }
             });
         }

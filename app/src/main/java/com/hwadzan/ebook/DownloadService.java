@@ -1,5 +1,6 @@
 package com.hwadzan.ebook;
 
+import android.app.DownloadManager;
 import android.app.Service;
 import android.content.Intent;
 import android.os.Environment;
@@ -7,7 +8,6 @@ import android.os.IBinder;
 import android.os.Message;
 
 import com.google.gson.Gson;
-import com.hwadzan.ebook.lib.CacheResult;
 import com.hwadzan.ebook.lib.DownloadSerialQueue;
 import com.hwadzan.ebook.lib.DownloadTask;
 import com.hwadzan.ebook.lib.MyDownloadListener;
@@ -81,63 +81,41 @@ public class DownloadService extends Service {
 
     MyDownloadListener downloadListener = new MyDownloadListener() {
         @Override
-        public void notifyMsg(Message msg) {
-            /**
-             *      *    public int what;
-             *      *    public int arg1; size
-             *      *    public int arg2; 间隔时间
-             *      *    public Object obj; List<DownloadTask>
-             */
-            if (msg.arg1 > 0) {
-                List<DownloadTask> downloadTaskList = (List<DownloadTask>) msg.obj;
+        public void notifyMsg(List<DownloadTask> downloadTaskList) {
+            if (downloadTaskList!=null && downloadTaskList.size() > 0) {
                 for (DownloadTask task : downloadTaskList) {
-                    Book b = bookManager.takeBookByDownloadUrl(task.downloadUrl);
-                    if (b != null) {
-                        b.downloaded = true;
-                        b.downloaProcess = getString(R.string.downoad_over);
-                        File tmpFile = new File(parentFile, b.fileName + ".tmp");
-                        File pdfFile = new File(parentFile, b.fileName);
+                    if(task.book.downloaded){
+                        task.book.downloaProcess = getString(R.string.downoad_over);
+                        File tmpFile = new File(parentFile, task.book.fileName + ".tmp");
+                        File pdfFile = new File(parentFile, task.book.fileName);
                         tmpFile.renameTo(pdfFile);
-                        serialQueue.stopDownloadTask(b.downloadId);
-                        bookManager.saveBook(b);
-                        //引发事件才对
-                        downloadServiceBinderListener.notifyAdapterDataSetChanged();
+                        bookManager.saveBook(task.book);
+                    } else {
+                        if(task.status == DownloadManager.STATUS_RUNNING) {
+                            if (task.downloadedBytes > 0 && task.totalBytes > 0) {
+                                if (task.downloadedBytes >= task.totalBytes) {
+                                    task.book.downloaProcess = "100%";
+                                } else {
+                                    task.book.downloaProcess = String.valueOf((int) ((double) task.downloadedBytes / task.totalBytes * 100)) + "%";
+                                }
+                            }
+                        } else if(task.status == DownloadManager.STATUS_SUCCESSFUL) {
+                            task.book.downloaProcess = "100%";
+                        } else if(task.status == DownloadManager.STATUS_PAUSED) {
+                            task.book.downloaProcess = getString(R.string.paused);
+                        } else if(task.status == DownloadManager.STATUS_FAILED) {
+                            task.book.downloaProcess = getString(R.string.downoad_error);
+                        } else if(task.status == DownloadManager.STATUS_PENDING) {
+                        }
                     }
                 }
+                //引发事件才对
+                downloadServiceBinderListener.notifyAdapterDataSetChanged();
             }
         }
     };
 
 
-    /**
-     * 添加下载任务
-     */
-    protected void downAllBooks(List<Book> bookList) {
-        List<DownloadTask> downloadTaskList = serialQueue.getDownloadTaskStatus();
-        for (Book b : bookList) {
-            //检测下载情况：查询id是否存在，如果存在则查询状态，若不存在，则删除tmp文件，重新下载
-            if (!b.downloaded && b.downloadId != -1 && checkBookDownloadTask(downloadTaskList, b)) {
-                //正在下载，什么也不做
-                b.downloaProcess = getString(R.string.downloading);
-            } else {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                dwonBook(b);
-            }
-        }
-        downloadServiceBinderListener.notifyAdapterDataSetChanged();
-    }
-
-    boolean checkBookDownloadTask(List<DownloadTask> downloadTaskList, Book b){
-        for (DownloadTask task: downloadTaskList) {
-            if(task.downloadId.equals(b.downloadId) && task.downloadUrl.equals(b.url))
-                return true;
-        }
-        return false;
-    }
 
     /**
      * 开启下载一本书的任务，并不通知更新UI
@@ -147,9 +125,17 @@ public class DownloadService extends Service {
         File tmpFile = new File(parentFile, b.fileName + ".tmp");
         if(tmpFile.exists())
             tmpFile.delete();
-        b.downloadId = serialQueue.download(b.url, b.fabo_title, b.fabo_content, tmpFile);
+        b.downloadId = serialQueue.download(b, tmpFile);
         b.downloaProcess = getString(R.string.downloading);
         bookManager.saveBook(b);
+    }
+
+    DownloadTask checkBookDownloadTask(List<DownloadTask> downloadTaskList, Book b){
+        for (DownloadTask task: downloadTaskList) {
+            if(task.downloadId.equals(b.downloadId) && task.downloadUrl.equals(b.url))
+                return task;
+        }
+        return null;
     }
 
     /**
@@ -186,8 +172,21 @@ public class DownloadService extends Service {
 
                     downloadServiceBinderListener.downloadConfigStateChange(downloadConfigState);
 
-                    //后台添加下载任务
-                    downAllBooks(bookList);
+                    List<DownloadTask> downloadTaskList = serialQueue.getAllDownloadTaskStatus();
+                    for (Book b : bookList) {
+                        File pdfFile = new File(parentFile, b.fileName);
+                        if(!b.downloaded && !pdfFile.exists()){
+                            //两种情况，要么已经存在下载任务，要么重新下载
+                            DownloadTask task = checkBookDownloadTask(downloadTaskList, b);
+                            if(task==null){
+                                dwonBook(b);
+                            } else {
+                                task.book = b;
+                                serialQueue.addExistsTask(task);
+                            }
+                        }
+                    }
+                    downloadServiceBinderListener.notifyAdapterDataSetChanged();
                 }
             }
         }

@@ -12,9 +12,14 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 
+import com.hwadzan.ebook.model.Book;
+
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class DownloadSerialQueue {
     public static final int HANDLE_DOWNLOAD = 0x001;
@@ -24,6 +29,10 @@ public class DownloadSerialQueue {
     private DownLoadBroadcast downLoadBroadcast = new DownLoadBroadcast();
     DownloadManager downloadManager;
     File parentDir;
+    Timer mTimer;
+    TimerTask mTimerTask;
+
+    HashMap<Long, DownloadTask> downloadTaskHashMap;
 
     public DownloadSerialQueue(Context context, MyDownloadListener downloadListener, File parentDir) {
         this.context = context;
@@ -32,18 +41,53 @@ public class DownloadSerialQueue {
         downLoadBroadcast = new DownLoadBroadcast();
         this.parentDir = parentDir;
         registerBroadcast();
+        downloadTaskHashMap = new HashMap<>();
+        mTimer = new Timer();
+
+    }
+
+
+
+    /**
+     * 在download函数中启动，如果已经启动就不再启动
+     */
+    private void startTimer(){
+        if (mTimer == null) {
+            mTimer = new Timer();
+        }
+
+        if (mTimerTask == null) {
+            mTimerTask = new TimerTask() {
+                @Override
+                public void run() {
+                    //这里定时查询，查询所有任务
+                    List<DownloadTask> downloadTaskList = getDownloadTaskStatus(-1);
+                    if(downloadTaskList.size()==0){
+                        stopTimer();
+                    } else {
+                        //任务有二、更新状态，通知UI更新
+                        if(downloadListener!=null)
+                            downloadListener.notifyMsg(downloadTaskList);
+                    }
+                }
+            };
+        }
+        mTimer.schedule(mTimerTask, 100, 1500);//延迟0.1秒开始运行，每隔1.5秒运行一次
     }
 
     /**
-     * 发送信息
+     * 在每次循环中检测，如果所有任务都已经下载完成，则停止循环
      */
-    private Handler downLoadHandler = new Handler(Looper.myLooper()) {
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            downloadListener.notifyMsg(msg);
+    private void stopTimer(){
+        if (mTimer != null) {
+            mTimer.cancel();
+            mTimer = null;
         }
-    };
+        if (mTimerTask != null) {
+            mTimerTask.cancel();
+            mTimerTask = null;
+        }
+    }
 
     /**
      * 注册广播
@@ -65,6 +109,13 @@ public class DownloadSerialQueue {
         }
     }
 
+    public void addExistsTask(DownloadTask task) {
+        downloadTaskHashMap.put(task.downloadId, task);
+        if(mTimer == null){
+            startTimer();
+        }
+    }
+
     /**
      * 接受下载完成广播
      */
@@ -73,16 +124,49 @@ public class DownloadSerialQueue {
         public void onReceive(Context context, Intent intent) {
             long downId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
             List<DownloadTask> downloadTaskList = getDownloadTaskStatus(downId);
-            downLoadHandler.sendMessage(downLoadHandler.obtainMessage(HANDLE_DOWNLOAD, downloadTaskList.size(), 0, downloadTaskList));
+            stopDownloadTask(downId);
+            downloadTaskHashMap.remove(downId);
+            if(downloadTaskHashMap.size()==0){
+                stopTimer();
+            }
+            for(DownloadTask t : downloadTaskList){
+                t.book.downloaded = true;
+            }
+            if(downloadListener!=null) downloadListener.notifyMsg(downloadTaskList);
         }
     }
 
-    public List<DownloadTask> getDownloadTaskStatus() {
-        return getDownloadTaskStatus(-1);
+    /**
+     * 下载系统中所有正在下载的任务，仅在下载服务初始化时用到，返回的DownloadTask中Book为null
+     * @return
+     */
+    public List<DownloadTask> getAllDownloadTaskStatus() {
+        Cursor cursor = null;
+        List<DownloadTask> downloadTaskList = new ArrayList<>();
+        try {
+            DownloadManager.Query query = new DownloadManager.Query();
+            cursor = downloadManager.query(query);
+            while (cursor != null && cursor.moveToNext()) {
+                DownloadTask task = new DownloadTask();
+                task.downloadId = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_ID));
+                task.downloadUrl = cursor.getString(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_URI));
+                task.downloadedBytes = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
+                task.totalBytes = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
+                task.status = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS));
+                task.localFileUri = cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
+                downloadTaskList.add(task);
+            }
+
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        return downloadTaskList;
     }
 
     /**
-     * 通过query查询下载状态，包括已下载数据大小，总大小，下载状态
+     * 通过query查询下载状态，包括已下载数据大小，总大小，下载状态，仅返回本APP创建的下载任务
      * @param downloadId
      * @return
      */
@@ -95,26 +179,17 @@ public class DownloadSerialQueue {
                 cursor = downloadManager.query(query);
             } else {
                 DownloadManager.Query query = new DownloadManager.Query();
-                //query.setFilterByStatus(DownloadManager.STATUS_FAILED|DownloadManager.STATUS_PAUSED|DownloadManager.STATUS_SUCCESSFUL|DownloadManager.STATUS_RUNNING|DownloadManager.STATUS_PENDING);
                 cursor = downloadManager.query(query);
             }
             while (cursor != null && cursor.moveToNext()){
-                DownloadTask task = new DownloadTask();
-                task.downloadId = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_ID));
-
-                task.downloadUrl = cursor.getString(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_URI));
-                //已经下载文件大小
-                task.downloadedBytes = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
-                //下载文件的总大小
-                task.totalBytes = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
-                //下载状态 大于等于1000 为出错
-                task.status = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS));
-
-                task.localFileUri = cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
-
-                System.out.println(task.localFileUri);
-
-                downloadTaskList.add(task);
+                long id = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_ID));
+                if(downloadTaskHashMap.containsKey(id)){ //如果是其它的程序建立的下载任务就不管它们了
+                    DownloadTask task = downloadTaskHashMap.get(id);
+                    task.downloadedBytes = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
+                    task.totalBytes = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
+                    task.status = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS));
+                    downloadTaskList.add(task);
+                }
             }
         } finally {
             if (cursor != null) {
@@ -127,12 +202,13 @@ public class DownloadSerialQueue {
     /**
      * 比较实用的升级版下载功能
      *
-     * @param url   下载地址
-     * @param title 文件名字
-     * @param desc  文件路径
+     * @param b   下载地址
+     * @param pdfFile  文件路径
      */
-    public long download(String url, String title, String desc, File pdfFile) {
-
+    public long download(Book b, File pdfFile) {
+        String url = b.url;
+        String title = b.fabo_title;
+        String desc = b.fabo_content;
         DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
         // 仅允许在WIFI连接情况下下载
         // request.setAllowedNetworkTypes(Request.NETWORK_WIFI);
@@ -165,7 +241,20 @@ public class DownloadSerialQueue {
             request.allowScanningByMediaScanner();
         }
 
-        return downloadManager.enqueue(request);
+        long id = downloadManager.enqueue(request);
+        DownloadTask task = new DownloadTask();
+        task.book = b;
+        task.downloadUrl = url;
+        task.downloadId = id;
+        //task.status = D
+        task.localFileUri = pdfFile.getAbsolutePath();
+        downloadTaskHashMap.put(id, task);
+
+        if(mTimer == null){
+            startTimer();
+        }
+
+        return id;
     }
 
 
@@ -187,9 +276,6 @@ public class DownloadSerialQueue {
      * 关闭定时器，线程等操作
      */
     private void close() {
-        if (downLoadHandler != null) {
-            downLoadHandler.removeCallbacksAndMessages(null);
-        }
     }
 
 }

@@ -55,8 +55,10 @@ public class BookManager {
         if (!found) {
             bookList.add(0, b);
             bookPreferencesHelper.save(b);
+            return true;
+        } else {
+            return false;
         }
-        return !found;
     }
 
     public boolean isDownOver() {

@@ -65,7 +65,7 @@ public class BookAdapter  extends RecyclerView.Adapter<BookViewHolder>{
         Book b = bookManager.getBookList().get(i);
         bookViewHolder.title.setText(b.fabo_title);
         if (b.downloaded) {
-            bookViewHolder.process.setVisibility(View.GONE);
+            bookViewHolder.process.setVisibility(View.INVISIBLE);
         } else {
             bookViewHolder.process.setVisibility(View.VISIBLE);
             bookViewHolder.process.setText(String.valueOf(b.downloaProcess));

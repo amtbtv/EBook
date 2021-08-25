@@ -10,7 +10,6 @@ tools:context=".ui.MainActivity">
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="?attr/qmui_topbar_height"
-        android:background="?attr/qmui_config_color_background"
         android:fitsSystemWindows="true">
 
         <androidx.recyclerview.widget.RecyclerView

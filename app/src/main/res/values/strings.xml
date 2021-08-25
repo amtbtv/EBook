@@ -24,7 +24,7 @@
     <string name="delfabao">移除</string>
     <string name="from_download">从%s下载%s</string>
     <string name="downoad_over">完成</string>
-    <string name="downoad_error">下载出错</string>
+    <string name="download_error">下载出错</string>
     <string name="NoBookMessage">请点击目录选择图书</string>
     <string name="ok">确定</string>
     <string name="Prompt">提示</string>
@@ -46,4 +46,5 @@
     <string name="ReDown">重新下载</string>
     <string name="Cancle">取消</string>
     <string name="search_text_too_short">搜索词至少2个字</string>
+    <string name="download_pending">等待...</string>
 </resources>

@@ -99,17 +99,27 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Book book = (Book) v.getTag();
-                File file = binder.getBookPdfFile(book);
-                if (book.downloaded && file.exists()) {
-                    Intent intent = new Intent(getThisActivity(), PdfReaderActivity.class);
-                    intent.putExtra("book", new Gson().toJson(book));
+                if(book == null){
+                    Toast.makeText(getThisActivity(), "Book is null", Toast.LENGTH_LONG).show();
+                }
+
+                if (book.downloaded) {
+                    File file = binder.getBookPdfFile(book);
+                    if(file.exists()) {
+                        Intent intent = new Intent(getThisActivity(), PdfReaderActivity.class);
+                        intent.putExtra("book", new Gson().toJson(book));
                     /*
                     book.lastReadTime = System.currentTimeMillis();
                     bookManager.save(book);
                     bookManager.sort();
                     bookAdapter.notifyDataSetChanged();
                     */
-                    startActivity(intent);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(getThisActivity(), "Book not exists", Toast.LENGTH_LONG).show();
+                    }
+                } else {
+                    Toast.makeText(getThisActivity(), "Book not downloaded", Toast.LENGTH_LONG).show();
                 }
             }
         });

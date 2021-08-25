@@ -2,7 +2,6 @@ package com.hwadzan.ebook.ui;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -10,6 +9,7 @@ import androidx.core.view.ViewCompat;
 
 import android.view.View;
 import android.view.Window;
+import android.view.animation.Animation;
 import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.widget.SeekBar;
@@ -18,6 +18,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.app.hubert.guide.NewbieGuide;
+import com.app.hubert.guide.listener.AnimationListenerAdapter;
 import com.app.hubert.guide.model.GuidePage;
 import com.github.barteksc.pdfviewer.PDFView;
 import com.github.barteksc.pdfviewer.listener.OnLoadCompleteListener;
@@ -33,6 +34,7 @@ import com.hwadzan.ebook.lib.SettingPreferencesHelper;
 import com.hwadzan.ebook.model.Book;
 import com.hwadzan.ebook.model.BookMark;
 import com.hwadzan.ebook.model.Setting;
+import com.qmuiteam.qmui.skin.QMUISkinManager;
 import com.qmuiteam.qmui.util.QMUIDisplayHelper;
 import com.qmuiteam.qmui.util.QMUIStatusBarHelper;
 import com.qmuiteam.qmui.util.QMUIViewHelper;
@@ -72,6 +74,10 @@ public class PdfReaderActivity extends Activity {
     SettingPreferencesHelper settingPreferencesHelper;
     Setting setting;
 
+    public static final int BLUE = 1;
+    public static final int DARK = 2;
+    QMUISkinManager mSkinManager;
+
     Handler handler;
     /*
         需要的功能
@@ -88,6 +94,10 @@ public class PdfReaderActivity extends Activity {
         QMUIStatusBarHelper.translucent(this);
 
         handler = new Handler();
+
+        mSkinManager = QMUISkinManager.defaultInstance(this);
+        mSkinManager.addSkin(BLUE, R.style.AppTheme);
+        mSkinManager.addSkin(DARK, R.style.app_skin_dark);
 
         screenWidth = QMUIDisplayHelper.getScreenWidth(this);
         screenWidth3 = screenWidth/3;
@@ -295,6 +305,8 @@ pdfView.fromAsset(String)
                             .setLayoutRes(R.layout.view_guide_activity_padreader_h))
                     .show();
         }
+
+        setPdfViewBackColor(setting.isNight);
     }
 
     void performPageSnap(){
@@ -314,6 +326,22 @@ pdfView.fromAsset(String)
         }, 300);
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        if(mSkinManager != null){
+            mSkinManager.register(this);
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if(mSkinManager != null){
+            mSkinManager.unRegister(this);
+        }
+    }
+
     boolean sizeChage(SizeF s1, SizeF s2){
         if(s1==null || s2==null)
             return true;
@@ -328,15 +356,16 @@ pdfView.fromAsset(String)
     }
 
     private void setPdfViewBackColor(boolean isNight){
+        //mTabContainer app_color_blue_2  qmui_config_color_black
         if(isNight){
-            pdfView.setBackgroundColor(Color.BLACK);
+            mSkinManager.changeSkin(DARK);
+            mTabContainer.setBackgroundColor(getColor(R.color.qmui_config_color_black));
+            pdfView.setBackgroundColor(getColor(R.color.qmui_config_color_pure_black));
         } else {
-            pdfView.setBackgroundColor(0xd4d6d8);
+            mSkinManager.changeSkin(BLUE);
+            mTabContainer.setBackgroundColor(getColor(R.color.app_color_blue));
+            pdfView.setBackgroundColor(getColor(R.color.qmui_config_color_gray_9));
         }
-    }
-
-    Activity getThisActivity(){
-        return this;
     }
 
     @Override
@@ -348,60 +377,15 @@ pdfView.fromAsset(String)
 
     private void changeToFullScreen() {
         isFullScreen = true;
-        Activity activity = this;
-        if (activity != null) {
-            Window window = activity.getWindow();
-            if (window == null) {
-                return;
-            }
-            View decorView = window.getDecorView();
-            int systemUi = decorView.getSystemUiVisibility();
-            systemUi |= View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                systemUi |= View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        | View.SYSTEM_UI_FLAG_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                systemUi |= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
-            }
-            decorView.setSystemUiVisibility(systemUi);
-            QMUIDisplayHelper.setFullScreen(this);
-            QMUIViewHelper.fadeOut(mTopBar, 300, null, true);
-            QMUIViewHelper.fadeOut(mTabContainer, 300, null, true);
-        }
+        QMUIDisplayHelper.setFullScreen(this);
+        QMUIViewHelper.fadeOut(mTopBar, 300, null, true);
+        QMUIViewHelper.fadeOut(mTabContainer, 300, null, true);
     }
 
     private void changeToNotFullScreen() {
         isFullScreen = false;
-        Activity activity = this;
-        if (activity != null) {
-            Window window = activity.getWindow();
-            if (window == null) {
-                return;
-            }
-            final View decorView = window.getDecorView();
-            int systemUi = decorView.getSystemUiVisibility();
-            systemUi &= ~View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                systemUi &= ~View.SYSTEM_UI_FLAG_FULLSCREEN;
-                systemUi |= View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                systemUi &= ~View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
-            }
-            decorView.setSystemUiVisibility(systemUi);
-            QMUIDisplayHelper.cancelFullScreen(this);
-            QMUIViewHelper.fadeIn(mTopBar, 300, null, true);
-            QMUIViewHelper.fadeIn(mTabContainer, 300, null, true);
-            decorView.post(new Runnable() {
-                @Override
-                public void run() {
-                    ViewCompat.requestApplyInsets(decorView);
-                }
-            });
-
-        }
-
+        QMUIDisplayHelper.cancelFullScreen(this);
+        QMUIViewHelper.fadeIn(mTopBar, 300, null, true);
+        QMUIViewHelper.fadeIn(mTabContainer, 300, null, true);
     }
 }

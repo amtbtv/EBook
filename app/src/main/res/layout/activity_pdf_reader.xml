@@ -15,13 +15,14 @@
             android:id="@+id/pdf_layout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:background="@color/qmui_config_color_gray_9"
             android:fitsSystemWindows="false">
 
             <com.github.barteksc.pdfviewer.PDFView
                 android:id="@+id/pdfView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@color/bar_divider" />
+                android:background="@color/qmui_config_color_gray_9" />
         </com.hwadzan.ebook.lib.PdfLinearLayout>
 
         <TextView
@@ -44,7 +45,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:background="@color/app_color_blue_2"
+        android:background="@color/app_color_blue"
         android:fitsSystemWindows="true">
 
         <LinearLayout
@@ -57,13 +58,15 @@
                 android:id="@+id/switchVerticalPage"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/verticalPage" />
+                android:text="@string/verticalPage"
+                android:textColor="@color/qmui_config_color_white" />
 
             <TextView
                 android:id="@+id/process"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="001/100" />
+                android:text="001/100"
+                android:textColor="@color/qmui_config_color_white" />
 
             <SeekBar
                 android:id="@+id/seekBarPage"
@@ -75,7 +78,8 @@
                 android:id="@+id/switchDayNight"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/night" />
+                android:text="@string/night"
+                android:textColor="@color/qmui_config_color_white" />
 
 
         </LinearLayout>

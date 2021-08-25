@@ -1,16 +1,15 @@
 package com.hwadzan.ebook;
 
-import android.app.DownloadManager;
 import android.app.Service;
 import android.content.Intent;
 import android.os.Environment;
 import android.os.IBinder;
-import android.os.Message;
 
 import com.google.gson.Gson;
-import com.hwadzan.ebook.lib.DownloadSerialQueue;
 import com.hwadzan.ebook.lib.DownloadTask;
+import com.hwadzan.ebook.lib.IDownloaderSerialQueue;
 import com.hwadzan.ebook.lib.MyDownloadListener;
+import com.hwadzan.ebook.lib.SimpleDownloaderSerialQueue;
 import com.hwadzan.ebook.lib.StringResult;
 import com.hwadzan.ebook.model.Book;
 import com.hwadzan.ebook.model.BookManager;
@@ -29,7 +28,7 @@ public class DownloadService extends Service {
     public static final String TAG = "DownloadService";
 
     File parentFile;
-    DownloadSerialQueue serialQueue;
+    IDownloaderSerialQueue serialQueue;
     BookManager bookManager;
     BookApplication app;
     DownloadServiceBinderListener downloadServiceBinderListener;
@@ -63,7 +62,8 @@ public class DownloadService extends Service {
         if (!parentFile.exists())
             parentFile.mkdirs();
 
-        serialQueue = new DownloadSerialQueue(this, downloadListener, parentFile);
+        serialQueue = new SimpleDownloaderSerialQueue();
+        serialQueue.init(downloadListener, parentFile);
 
         if (app.isNetworkConnected()) {
             downloadConfigState = DownloadConfigState.Downloading; //开始下载，正在下载中
@@ -85,13 +85,9 @@ public class DownloadService extends Service {
             if (downloadTaskList!=null && downloadTaskList.size() > 0) {
                 for (DownloadTask task : downloadTaskList) {
                     if(task.book.downloaded){
-                        task.book.downloaProcess = getString(R.string.downoad_over);
-                        File tmpFile = new File(parentFile, task.book.fileName + ".tmp");
-                        File pdfFile = new File(parentFile, task.book.fileName);
-                        tmpFile.renameTo(pdfFile);
                         bookManager.saveBook(task.book);
                     } else {
-                        if(task.status == DownloadManager.STATUS_RUNNING) {
+                        if(task.status == DownloadTask.Status.RUNNING) {
                             if (task.downloadedBytes > 0 && task.totalBytes > 0) {
                                 if (task.downloadedBytes >= task.totalBytes) {
                                     task.book.downloaProcess = "100%";
@@ -99,13 +95,14 @@ public class DownloadService extends Service {
                                     task.book.downloaProcess = String.valueOf((int) ((double) task.downloadedBytes / task.totalBytes * 100)) + "%";
                                 }
                             }
-                        } else if(task.status == DownloadManager.STATUS_SUCCESSFUL) {
+                        } else if(task.status == DownloadTask.Status.SUCCESSFUL) {
                             task.book.downloaProcess = "100%";
-                        } else if(task.status == DownloadManager.STATUS_PAUSED) {
+                        } else if(task.status == DownloadTask.Status.PAUSED) {
                             task.book.downloaProcess = getString(R.string.paused);
-                        } else if(task.status == DownloadManager.STATUS_FAILED) {
-                            task.book.downloaProcess = getString(R.string.downoad_error);
-                        } else if(task.status == DownloadManager.STATUS_PENDING) {
+                        } else if(task.status == DownloadTask.Status.FAILED) {
+                            task.book.downloaProcess = getString(R.string.download_error);
+                        } else if(task.status == DownloadTask.Status.PENDING) {
+                            task.book.downloaProcess = getString(R.string.download_pending);
                         }
                     }
                 }
@@ -122,20 +119,9 @@ public class DownloadService extends Service {
      * @param b
      */
     protected void dwonBook(Book b){
-        File tmpFile = new File(parentFile, b.fileName + ".tmp");
-        if(tmpFile.exists())
-            tmpFile.delete();
-        b.downloadId = serialQueue.download(b, tmpFile);
+        b.downloadId = serialQueue.download(b);
         b.downloaProcess = getString(R.string.downloading);
         bookManager.saveBook(b);
-    }
-
-    DownloadTask checkBookDownloadTask(List<DownloadTask> downloadTaskList, Book b){
-        for (DownloadTask task: downloadTaskList) {
-            if(task.downloadId.equals(b.downloadId) && task.downloadUrl.equals(b.url))
-                return task;
-        }
-        return null;
     }
 
     /**
@@ -161,7 +147,7 @@ public class DownloadService extends Service {
                     List<Book> bookList = new ArrayList<>();
                     //开始下载未下载完成的电子图书
                     for (Book b : bookManager.getBookList()) {
-                        File pdfFile = new File(parentFile, b.fileName);
+                        File pdfFile = getBookPdfFile(b);
                         // 这里是为了防止清空缓存之类的操作，把电子书都删除了。默认情况下已下载电子的downloaded=true
                         if (!pdfFile.exists()) {
                             b.downloaded = false;
@@ -172,18 +158,10 @@ public class DownloadService extends Service {
 
                     downloadServiceBinderListener.downloadConfigStateChange(downloadConfigState);
 
-                    List<DownloadTask> downloadTaskList = serialQueue.getAllDownloadTaskStatus();
                     for (Book b : bookList) {
-                        File pdfFile = new File(parentFile, b.fileName);
+                        File pdfFile = getBookPdfFile(b);
                         if(!b.downloaded && !pdfFile.exists()){
-                            //两种情况，要么已经存在下载任务，要么重新下载
-                            DownloadTask task = checkBookDownloadTask(downloadTaskList, b);
-                            if(task==null){
-                                dwonBook(b);
-                            } else {
-                                task.book = b;
-                                serialQueue.addExistsTask(task);
-                            }
+                            dwonBook(b);
                         }
                     }
                     downloadServiceBinderListener.notifyAdapterDataSetChanged();
@@ -211,7 +189,7 @@ public class DownloadService extends Service {
             stopService(stopIntent);
         }
 
-        serialQueue.unregisterBroadcast();
+        serialQueue.close();
     }
 
     public void setDownloadServiceBinderListener(DownloadServiceBinderListener downloadServiceBinderListener) {
